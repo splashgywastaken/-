@@ -1,0 +1,6 @@
+\babel@toc {russian}{}\relax 
+\contentsline {section}{\numberline {1}Цели и задачи работы}{3}{}%
+\contentsline {section}{\numberline {2}Математический формализм}{3}{}%
+\contentsline {section}{\numberline {3}Метод пристрелки и алгоритм}{3}{}%
+\contentsline {section}{\numberline {4}Программная реализация алгоритма}{3}{}%
+\contentsline {section}{\numberline {5}Результаты численных экспериментов}{4}{}%
