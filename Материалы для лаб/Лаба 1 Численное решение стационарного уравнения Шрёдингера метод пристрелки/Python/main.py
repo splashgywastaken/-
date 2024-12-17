@@ -4,7 +4,7 @@ from scipy.special import eval_genlaguerre
 
 
 # Потенциальная функция на основе полинома Лагерра
-def U(x):
+def u(x):
     if abs(x) < L:
         return V0 * eval_genlaguerre(5, 0, abs(x))  # Полином Лагерра L_5(x)
     else:
@@ -13,7 +13,7 @@ def U(x):
 
 # Функция q(E, x) для преобразования потенциала
 def q(e, x):
-    return 2.0 * (e - U(x))
+    return 2.0 * (e - u(x))
 
 
 # Численное вычисление производной (формула 19)
@@ -54,7 +54,7 @@ def f_fun(e, r, n):
 
 # Основные параметры задачи
 L = 3.0  # Полуширина потенциальной ямы (Å)
-A = -L  # Левая граница
+A: float = -L  # Левая граница
 B = L  # Правая граница
 n = 501  # Количество узлов сетки
 h = (B - A) / (n - 1)  # Шаг сетки
@@ -79,8 +79,8 @@ f = f_fun(E, r, n)
 print("f(E) =", f)
 
 # Построение графика
-Upot = np.array([U(X[i]) for i in range(n)])
-plt.axis([A, B, -5, V0 + 5])
+Upot = np.array([u(X[i]) for i in range(n)])
+plt.axis([A - 0.1, B + 0.1, -5.0, V0 + 5.0])
 Zero = np.zeros(n, dtype=float)
 plt.plot(X, Zero, 'k-', linewidth=1.0)
 plt.plot(X, Upot, 'g-', linewidth=6.0, label="U(x)")
