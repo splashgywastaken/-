@@ -4,12 +4,22 @@ from scipy.misc import derivative
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 from scipy.optimize import brentq
+from scipy.special import eval_laguerre
 
 LST = open("shrodinger-2b.txt", "wt")
 
 # потенциальная функция
 def U(x, L, U0, W):
-    return np.where(np.abs(x) < L, U0, W)
+    # Проверяем, скаляр ли x
+    if np.isscalar(x):
+        # x - число
+        return U0 * eval_laguerre(5, abs(x)) if abs(x) <= L else np.inf
+    else:
+        # x - массив
+        inside = np.abs(x) <= L
+        U_val = np.full_like(x, np.inf, dtype=float)
+        U_val[inside] = U0 * eval_laguerre(5, np.abs(x[inside]))
+        return U_val
 
 # функция ф-ла (13)
 def q(e_arg, x, L, U0, W):
@@ -107,14 +117,14 @@ def plotting_wf(e_arg, X, XX, r, rr, L, U0, W, ngr):
     plt.show()
 
 # Основная часть
-L = 2.0
+L = 3.0
 A = -L
 B = +L
 n = 1001
 print(f"n={n}")
 print(f"n={n}", file=LST)
-U0 = -1.0
-W = 4.0
+U0 = 25.0
+W = 3.0
 X = np.asarray(np.linspace(A, B, n), dtype="float64")  # Для интегрирования "вперед"
 XX = np.asarray(np.linspace(A, B, n), dtype="float64") # Для интегрирования "назад"
 r = (n - 1) * 3 // 4    # для Psi
