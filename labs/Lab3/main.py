@@ -1,5 +1,5 @@
 """
-Маркин Р.О. РАСЧЕТ ОСНОВНОГО КВАНТОВОГО СОСТОЯНИЯ ЧАСТИЦЫ В ОДНОМЕРНОЙ ПОТЕНЦИАЛЬНОЙ ЯМЕ
+Крутько А.С. РАСЧЕТ ОСНОВНОГО КВАНТОВОГО СОСТОЯНИЯ ЧАСТИЦЫ В ОДНОМЕРНОЙ ПОТЕНЦИАЛЬНОЙ ЯМЕ
 С БЕСКОНЕЧНЫМИ СТЕНКАМИ С ИСПОЛЬЗОВАНИЕМ РАЗЛОЖЕНИЯ ИСКОМОЙ ВОЛНОВОЙ ФУНКЦИИ ПО БАЗИСУ.
 Программа написана на языке Python 3.0, в среде разработки PyCharm Community Edition 2024.2.1,
 операционная система Windows 10.
@@ -7,11 +7,12 @@
 import numpy as np
 from scipy.linalg import eigh
 import matplotlib.pyplot as plt
-from scipy.special import jn
+from scipy.special import eval_laguerre
 
 
-def U(x):
-    return V0 * jn(2, x) if abs(x) < L else W
+def u_func(x):
+    return V0 * eval_laguerre(5, x) if abs(x) < L else W
+
 
 """
 The Ritz method
@@ -24,66 +25,75 @@ def basis_function(k):
         result[i] = np.sin(arg) / np.sqrt(L) if (k + 1) % 2 == 0 else np.cos(arg) / np.sqrt(L)
     return result
 
-def second_deriv(y, h):
-    deriv = np.zeros_like(y)
+
+def find_second_derivative(y, h):
+    derivative = np.zeros_like(y)
     for i in range(len(y)):
         if i == 0:
-            deriv[i] = (2 * y[i] - 5 * y[i + 1] + 4 * y[i + 2] - y[i + 3]) / (h * h)
+            derivative[i] = (2 * y[i] - 5 * y[i + 1] + 4 * y[i + 2] - y[i + 3]) / (h * h)
         elif i == len(y) - 1:
-            deriv[i] = (-y[i - 3] + 4 * y[i - 2] - 5 * y[i - 1] + 2 * y[i]) / (h * h)
+            derivative[i] = (-y[i - 3] + 4 * y[i - 2] - 5 * y[i - 1] + 2 * y[i]) / (h * h)
         else:
-            deriv[i] = (y[i - 1] - 2 * y[i] + y[i + 1]) / (h * h)
-    return deriv
+            derivative[i] = (y[i - 1] - 2 * y[i] + y[i + 1]) / (h * h)
+    return derivative
+
 
 def h_psi(k):
     psi_k = basis_function(k)
     result = np.zeros(N)
     h = (2 * L) / (N - 1)
-    deriv_psi = second_deriv(psi_k, h)
+    derivative_psi = find_second_derivative(psi_k, h)
     for i in range(N):
-        result[i] = deriv_psi[i] / (-2) + U(-L + i * h) * psi_k[i]
+        result[i] = derivative_psi[i] / (-2) + u_func(-L + i * h) * psi_k[i]
     return result
+
 
 def hamiltonian_element(m, k):
     fi_m = basis_function(m)
     h_fi_k = h_psi(k)
     return np.trapz(fi_m * h_fi_k, dx=(2 * L) / (N - 1))
 
+
 def hamiltonian_matrix():
-    h_matrix = np.zeros((M, M))
+    inner_h_matrix = np.zeros((M, M))
     for i in range(M):
         for j in range(M):
-            h_matrix[i, j] = hamiltonian_element(i, j)
-    return h_matrix
+            inner_h_matrix[i, j] = hamiltonian_element(i, j)
+    return inner_h_matrix
 
-def eigen_solve(h_matrix):
-    eigenvalues, eigenvectors = eigh(h_matrix)
-    return eigenvalues, eigenvectors
 
-def compute_wave_function(coef):
+def eigen_solve(inner_h_matrix):
+    eigenvalues, eigenvalues_vectors = eigh(inner_h_matrix)
+    return eigenvalues, eigenvalues_vectors
+
+
+def compute_wave_function(coefficient):
     result = np.zeros(N)
     for k in range(M):
-        result += coef[k] * basis_function(k)
+        result += coefficient[k] * basis_function(k)
     return result
 
-def mean_momentum(Psi, X):
-    hbar = 1.0
-    dPsi_dx = np.gradient(Psi, X)
-    integrand = Psi.conj() * dPsi_dx
-    mean_Px = -1j * hbar * np.trapz(integrand, X)
+
+def mean_momentum(arg_psi, arg_x):
+    h_bar = 1.0
+    dPsi_dx = np.gradient(arg_psi, arg_x)
+    integrand = arg_psi.conj() * dPsi_dx
+    mean_Px = -1j * h_bar * np.trapz(integrand, arg_x)
     return mean_Px.real
 
-def mean_square_momentum(Psi, X):
-    hbar = 1.0
-    d2Psi_dx2 = np.gradient(np.gradient(Psi, X), X)
-    integrand = Psi.conj() * d2Psi_dx2
-    mean_Px2 = -hbar**2 * np.trapz(integrand, X)
+
+def mean_square_momentum(arg_psi, arg_x):
+    h_bar = 1.0
+    d2Psi_dx2 = np.gradient(np.gradient(arg_psi, arg_x), arg_x)
+    integrand = arg_psi.conj() * d2Psi_dx2
+    mean_Px2 = -h_bar**2 * np.trapz(integrand, arg_x)
     return mean_Px2.real
 
-def plot_wave_functions(energies, wave_functions):
+
+def plot_wave_functions(arg_energies, arg_wave_functions):
     x_vals = np.linspace(-L, L, N)
-    potential = np.array([U(x) for x in x_vals])
-    for i, psi in enumerate(wave_functions):
+    potential = np.array([u_func(x) for x in x_vals])
+    for i, psi in enumerate(arg_wave_functions):
         f_fun(exact_energies[i], n)
         Psi_norm = normalize_wavefunction(Psi.copy())
         mean_Px = mean_momentum(Psi_norm, X)
@@ -92,33 +102,33 @@ def plot_wave_functions(energies, wave_functions):
         mean_P2 = mean_square_momentum(psi.copy(), x_vals)
         density_psi = psi ** 2
 
-        plt.plot(x_vals, psi, 'r', label=f"State {i} (E = {energies[i]:.5f})")
+        plt.plot(x_vals, psi, 'r', label=f"State {i} (E = {arg_energies[i]:.5f})")
         plt.plot(x_vals, density_psi, 'b', label=f"Probability Density {i}")
         plt.plot(x_vals, potential, 'g', label="U(x)")
         plt.xlabel("x")
         plt.ylabel("Psi(x), U(x)")
         plt.legend()
         plt.grid()
-        plt.savefig(f"State {i} probability density.pdf", dpi=300)
+        plt.savefig(f"./python_results/State {i} probability density.jpg", dpi=300)
         plt.show()
 
         print("=====================================================")
-        print("=====================================================", file=file1)
-        print(f"State {i}: E = {energies[i]:.6f}, <p_x> = {mean_Px:.6e}, <p_x^2> = {mean_Px2:.6e}")
-        print(f"State {i}: E = {energies[i]:.6f}, <p_x> = {mean_Px:.6e}, <p_x^2> = {mean_Px2:.6e}", file=file1)
+        print("=====================================================", file=output_file)
+        print(f"State {i}: E = {arg_energies[i]:.6f}, <p_x> = {mean_Px:.6e}, <p_x^2> = {mean_Px2:.6e}")
+        print(f"State {i}: E = {arg_energies[i]:.6f}, <p_x> = {mean_Px:.6e}, <p_x^2> = {mean_Px2:.6e}", file=output_file)
         print(f"State {i}: E_target = {exact_energies[i]:.6f}, <p_x> = {mean_P:.6e}, <p_x^2> = {mean_P2:.6e}")
-        print(f"State {i}: E_target = {exact_energies[i]:.6f}, <p_x> = {mean_P:.6e}, <p_x^2> = {mean_P2:.6e}", file=file1)
+        print(f"State {i}: E_target = {exact_energies[i]:.6f}, <p_x> = {mean_P:.6e}, <p_x^2> = {mean_P2:.6e}", file=output_file)
         print("=====================================================")
-        print("=====================================================", file=file1)
+        print("=====================================================", file=output_file)
 
-        plt.plot(x_vals, psi, 'r', label=f"State {i} (E = {energies[i]:.5f})")
+        plt.plot(x_vals, psi, 'r', label=f"State {i} (E = {arg_energies[i]:.5f})")
         plt.plot(X, Psi_norm, 'b--', label=f"State {i} (E_target = {exact_energies[i]:.5f})")
         plt.plot(x_vals, potential, 'g', label="U(x)")
         plt.xlabel("x")
         plt.ylabel("Psi(x), U(x)")
         plt.legend()
         plt.grid()
-        plt.savefig(f"State {i}.pdf",dpi=300)
+        plt.savefig(f"./python_results/State {i}.jpg",dpi=300)
         plt.show()
 
 
@@ -137,7 +147,7 @@ def normalize_wavefunction(Y):
     return Y / norm
 
 def q(e, x):
-    return 2.0 * (e - U(x))
+    return 2.0 * (e - u_func(x))
 
 def deriv(Y, h, m):
     return (Y[m - 2] - Y[m + 2] + 8.0 * (Y[m + 1] - Y[m - 1])) / (12.0 * h)
@@ -165,58 +175,59 @@ def f_fun(e, n):
 
     Psi[:] = Psi[:] / big
 
-    coef = Psi[r] / Fi[r]
-    Fi[:] = coef * Fi[:]
+    coefficient = Psi[r] / Fi[r]
+    Fi[:] = coefficient * Fi[:]
 
     return deriv(Psi, h, r) - deriv(Fi, h, r)
 
-def energy_scan(E_min, E_max, step):
-    energies = []
+def energy_scan(arg_e_min, arg_e_max, arg_step):
+    inner_energies = []
     values = []
-    E = E_min
-    while E <= E_max:
+    E = arg_e_min
+    while E <= arg_e_max:
         f_value = f_fun(E, n)
-        energies.append(E)
+        inner_energies.append(E)
         values.append(f_value)
-        E += step
-    return energies, values
+        E += arg_step
+    return inner_energies, values
 
-def find_exact_energies(E_min, E_max, step, tol):
-    energies, values = energy_scan(E_min, E_max, step)
-    exact_energies = []
+
+def find_exact_energies(arg_e_min, arg_e_max, arg_step, arg_tol):
+    inner_energies, values = energy_scan(arg_e_min, arg_e_max, arg_step)
+    inner_exact_energies = []
     for i in range(1, len(values)):
         Log1 = values[i] * values[i - 1] < 0.0
-        Log2 = np.abs(values[i] - values[i - 1]) < porog
+        Log2 = np.abs(values[i] - values[i - 1]) < limit
         if Log1 and Log2:
-            E1, E2 = energies[i - 1], energies[i]
-            exact_energy = bisection_method(E1, E2, tol)
+            E1, E2 = inner_energies[i - 1], inner_energies[i]
+            exact_energy = bisection_method(E1, E2, arg_tol)
             f_fun(exact_energy, n)
-            exact_energies.append(exact_energy)
-    return exact_energies
+            inner_exact_energies.append(exact_energy)
+    return inner_exact_energies
 
-def bisection_method(E1, E2, tol):
-    while abs(E2 - E1) > tol:
-        Emid = (E1 + E2) / 2.0
-        f1, f2, fmid = f_fun(E1, n), f_fun(E2, n), f_fun(Emid, n)
-        if f1 * fmid < 0.0:
-            E2 = Emid
+def bisection_method(arg_e1, arg_e2, arg_tol):
+    while abs(arg_e2 - arg_e1) > arg_tol:
+        Emid = (arg_e1 + arg_e2) / 2.0
+        f1, f2, f_mid = f_fun(arg_e1, n), f_fun(arg_e2, n), f_fun(Emid, n)
+        if f1 * f_mid < 0.0:
+            arg_e2 = Emid
         else:
-            E1 = Emid
-        if f2 * fmid < 0.0:
-            E1 = Emid
+            arg_e1 = Emid
+        if f2 * f_mid < 0.0:
+            arg_e1 = Emid
         else:
-            E2 = Emid
-    return (E1 + E2) / 2.0
+            arg_e2 = Emid
+    return (arg_e1 + arg_e2) / 2.0
 
 
 """
 Parameters
 """
-clength = 0.5292
-cenergy = 27.212
+c_length = 0.5292
+c_energy = 27.212
 
-L = 3.0/clength
-V0 = 25.0/cenergy
+L = 3.0 / c_length
+V0 = 25.0 / c_energy
 W = 3.0
 
 N = 1001
@@ -228,7 +239,7 @@ h = (B - A) / (n - 1)
 c = h ** 2 / 12.0
 Psi, Fi, X = np.zeros(n), np.zeros(n), np.linspace(A, B, n)
 r = (n-1)//2 - 100
-porog = 4.0
+limit = 4.0
 
 d1, d2 = 1.e-09, 1.e-09
 tol = 1e-6
@@ -245,10 +256,10 @@ energies, eigenvectors = eigen_solve(h_matrix)
 wave_functions = [compute_wave_function(eigenvectors[:, i]) for i in range(3)]
 normalized_wave_functions = [normalize_wave_function(psi) for psi in wave_functions]
 
-file1 = open("result.txt", "a")
+output_file = open("./python_results/result.txt", "a")
 for i, energy in enumerate(energies[:5]):
     print(f"State {i}: E = {energy:.6f}")
-    print(f"State {i}: E = {energy:.6f}", file=file1)
+    print(f"State {i}: E = {energy:.6f}", file=output_file)
 
 plot_wave_functions(energies, normalized_wave_functions)
 

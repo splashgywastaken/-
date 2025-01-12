@@ -1,0 +1,295 @@
+\documentclass[a4paper,12pt]{article}
+
+
+\usepackage{mathtext}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{nameref}
+\usepackage{subcaption}
+\usepackage[margin=1.5pt]{geometry}
+\usepackage{float}
+\usepackage{latexsym}
+\usepackage{stmaryrd}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tabularx}
+
+
+\geometry{left=2cm, right=2cm, top=2cm, bottom=2cm}
+
+\begin{document}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{1,1,1}
+
+\lstdefinestyle{pythonStyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{red},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\lstset{style=pythonStyle}
+
+\pagestyle{empty}
+
+\begin{center}
+\textbf{МИНОБРНАУКИ РОССИИ}\\
+ФЕДЕРАЛЬНОЕ ГОСУДАРСТВЕННОЕ БЮДЖЕТНОЕ \\
+ОБРАЗОВАТЕЛЬНОЕ УЧРЕЖДЕНИЕ ВЫСШЕГО ОБРАЗОВАНИЯ \\
+ВОРОНЕЖСКИЙ ГОСУДАРСТВЕННЫЙ УНИВЕРСИТЕТ \\
+Факультет прикладной математики, информатики и механики\\
+Кафедра вычислительной математики и прикладных информационных технологий
+\end{center}
+
+\vspace{2cm}
+\begin{center}
+\textbf{ЛАБОРАТОРНАЯ РАБОТА №3}\\
+\textbf{ЧИСЛЕННОЕ РЕШЕНИЕ СТАЦИОНАРНОГО УРАВНЕНИЯ ШРЁДИНГЕРА: РАСЧЁТ ОСНОВНОГО КВАНТОВОГО СОСТОЯНИЯ ЧАСТИЦЫ В ОДНОМЕРНОЙ ПОТЕНЦИАЛЬНОЙ ЯМЕ С БЕСКОНЕЧНЫМИ СТЕНКАМИ С ИСПОЛЬЗОВАНИЕМ РАЗЛОЖЕНИЯ ИСКОМОЙ ВОЛНОВОЙ ФУНКЦИИ ПО БАЗИСУ}
+\end{center}
+
+\vspace{3cm}
+\begin{flushright}
+\begin{tabular}{l l}
+\textbf{Направление:} & 01.04.02 \textendash{} Прикладная математика и информатика \\
+\textbf{Выполнил:} & студент 11 группы 2 курса магистратуры \\
+& Крутько А.С. \\
+\textbf{Преподаватель:} & доктор физ.-мат. наук, профессор Тимошенко Ю.К.
+\end{tabular}
+\end{flushright}
+
+\vspace{3cm}
+\begin{center}
+Воронеж 2024
+\end{center}
+
+\newpage
+\tableofcontents
+\pagestyle{plain}
+\setcounter{page}{2}
+
+\newpage
+\section{Цели и задачи работы}\label{sec:goals}
+\subsection{Цель работы.}\label{subsec:-.}
+Целями лабораторной работы являются практическое освоение информации, полученной при изучении курса <<Компьютерное моделирование в математической физике>> по теме <<Численное решение стационарного уравнения Шрёдингера>>, а также развитие алгоритмического мышления и приобретение опыта использования знаний и навыков по математике, численным методам и программированию для решения прикладных задач физико-технического характера.
+
+\subsection{Задачи работы:}\label{subsec:-:}
+
+\textbf{Проблема:} электрон находится в одномерной потенциальной яме с бесконечными стенками $U(x)$:
+\[
+v(x) =
+    \begin{cases}
+        J_2(x), & x \in (-L, L), \\
+        \infty, & x \notin (-L, L),
+    \end{cases}
+\]
+Где $U(x) = v(x)*V_0$, $V_0 = 25$ \text{эВ}, $L = 3$ \AA, $J_n(x)$ -- функция Бесселя, $n = 2$.
+
+\begin{enumerate}
+    \item Рассчитать энергию и волновую функцию основного квантового состояния путем разложения искомой волновой функции по базису.
+          Использовать в качестве базисного набора - волновые функции частицы в одномерной прямоугольной яме с бесконечными стенками.
+    \item Вычислить для этих состояний квантовомеханические средние $\langle p(x) \rangle$ и $ \langle p(x^2) \rangle $.
+\end{enumerate}
+
+\newpage
+\section{Одномерное стационарное уравнение Шрёдингера. Математический формализм. Общие свойства решений}\label{sec:-}
+Одномерное стационарное уравнение Шрёдингера~\cite{tim_shrod}:
+\begin{equation}
+    \hat{H}\psi(x) = E\psi(x),
+    \label{eq:oneDimShrodingerEq}
+\end{equation}
+где $\hat{H}$ \textendash{} оператор Гамильтона, $E$ \textendash{} собственные значения энергии, $\psi(x)$ \textendash{} волновая функция.
+
+С математической точки зрения оно представляет собой задачу определения собственных значений $E$ и собственных функций $\psi$ оператора Гамильтона $\hat{H}$.
+Для частицы с массой $m$, находящейся в потенциальном поле $U(x)$, оператор Гамильтона имеет вид
+\begin{equation}
+    \hat{H} = \hat{T}+ U(x),
+    \label{eq:gamilton_op}
+\end{equation}
+где оператор кинетической энергии
+\begin{equation}
+    \hat{T} =-\frac{\hslash^2}{2m}\frac{d^2}{dx^2},
+    \label{eq:gamilton_kinetic_e_op}
+\end{equation}
+а $\hslash$ --- постоянная Планка.
+Собственное значение оператора Гамильтона имеет смысл энергии соответствующей изолированной квантовой системы.
+Собственные функции называются волновыми функциями.
+Волновая функция однозначна и непрерывна во всём пространстве.
+Непрерывность волновой функции и её первой производной сохраняется и при обращении $U(x)$ в $\infty$ некоторой области пространства.
+В такую область частица вообще не может проникнуть, то есть в этой области, а также на её границе $\psi(x)=0$.
+
+Оценим нижнюю границу энергетического спектра.
+Пусть минимальное значение потенциальной функции равно $U_{\min}$.
+Очевидно, что $\langle T \rangle \geq 0$ и $\langle U \rangle \geq U_{\min}$.
+Потому из уравнения~\eqref{eq:oneDimShrodingerEq} следует, что:
+\begin{equation}
+    E =\langle H\rangle = \int_{-\infty}^{+\infty} \psi^\star(x)\hat{H}\psi(x) \,dx =\langle T\rangle +\langle U\rangle > U_{\min}.
+\label{eq:e_h_integral}
+\end{equation}
+то есть, энергии всех состояний > $U_{min}$.
+
+Особый практический интерес представляет случай, когда
+\begin{equation}
+    \lim_{x\to\infty} U(x) = 0.
+\label{eq:limit_pot_inf}
+\end{equation}
+
+Потенциал такого типа называется также потенциальной ямой.
+Для данной $U(x)$ свойства решений уравнения Шрёдингера зависят от знака собственного значения $E$.
+Если $E < 0$.
+Частица с отрицательной энергией совершает финитное движение.
+Оператор Гамильтона имеет дискретный спектр, то есть собственные значения и соответствующие собственные функции можно снабдить номерами.
+При~$E < 0$ уравнение~\eqref{eq:oneDimShrodingerEq} приобретает вид\cite{tim_shrod}:
+
+\begin{equation}
+    \hat{H}\psi_k(x) = E_k\psi_k(x).
+    \label{eq:shrodinger_eq_e_less_0}
+\end{equation}
+
+Квантовое состояние, обладающее наименьшей энергией, называется основным.
+Остальные состояния называют возбужденными состояниями.
+В силу линейности стационарного уравнения Шрёдингера, волновые функции математически определены с точностью до постоянного множителя.
+Однако, из физических соображений, волновые функции должны быть нормированы следующим образом:
+
+\begin{equation}
+    \int_{-\infty}^{+\infty} |\psi_k(x)|^2, dx = 1.
+    \label{eq:wave_func_normalization}
+\end{equation}
+
+В дальнейшем будет рассматриваться только дискретный спектр.
+При этом необходимо пользоваться \textbf{осцилляционной теоремой}.
+
+\textbf{Осцилляционная теорема.}
+Упорядочим собственные значения оператора Гамильтона в порядке возрастания, нумеруя энергию основного состояния индексом "0": $E_0$, $E_1$, $E_2$ \dots, $E_k$,\dots.
+Тогда волновая функция $\psi_k(x)$ будет иметь $k$ узлов (то есть, пересечений с осью абсцисс).
+Исключения: области, в которых потенциальная функция бесконечна.
+
+\newpage
+
+\section{Прямой вариационный метод. Алгоритм}\label{sec:solve_method}
+\input{solve_method}
+
+\newpage
+
+\section{Программная реализация алгоритма}\label{sec:--}
+\input{code_description}
+
+\newpage
+
+\section{Результаты численных экспериментов}\label{sec:results}
+
+Ниже продемонстрированы результаты работы программного кода написанного на Python.
+
+\subsection{Иллюстрация работы программы}\label{subsec:results_images}
+
+Потенциал из постановки задачи представлен на Рис.~\ref{fig:pot_func}
+
+%\begin{figure}[h]
+%\centering
+%    \includegraphics[width=0.45\linewidth]{}
+%    \caption{Вероятностная плотность}\label{fig:pot_func}
+%\end{figure}
+
+%\begin{figure}[H]
+%    \centering
+%    \begin{subfigure}{0.45\textwidth}
+%        \centering
+%        \includegraphics[width=0.9\linewidth]{Condition_0_(normalized)}
+%        \caption{Нормализованное состояние}
+%        \label{fig:norm0}
+%    \end{subfigure}%
+%    \begin{subfigure}{0.45\textwidth}
+%        \centering
+%        \includegraphics[width=0.9\linewidth]{Condition_0_(Probability_density)}
+%        \caption{Вероятностная плотность}
+%        \label{fig:probDens0}
+%    \end{subfigure}%
+%\caption{Графики для состояния 0}
+%\end{figure}
+%\label{fig:cond0}
+
+
+
+%\begin{figure}[H]
+%    \centering
+%    \begin{subfigure}{0.45\textwidth}
+%        \centering
+%        \includegraphics[width=0.9\linewidth]{Condition_2_(normalized)}
+%        \caption{Нормализованное состояние}
+%        \label{fig:norm2}
+%    \end{subfigure}%
+%    \begin{subfigure}{0.45\textwidth}
+%        \centering
+%        \includegraphics[width=0.9\linewidth]{Condition_2_(Probability_density)}
+%        \caption{Вероятностная плотность}
+%        \label{fig:probDens2}
+%    \end{subfigure}%
+%\caption{Графики для состояния 1}
+%\end{figure}
+%\label{fig:cond2}
+
+\subsection{Значения искомых параметров}\label{subsec:results_values}
+
+Ниже результаты численных экспериментов, полученных в результате работы программы выведены в таблицу:
+
+Квантовомеханические средние $\langle p(x) \rangle$ и $\langle p(x^2) \rangle$ для основного, первого и второго возбужденного состояний:
+
+\noindent
+\begin{tabularx}{\linewidth}{|c|X|X|X|}
+    \hline
+    \textbf{Состояние}&\textbf{Энергия, а.е.}&\textbf{$\langle p(x) \rangle$}&\textbf{$\langle p(x^2) \rangle$} \\
+    \hline
+    Основное & $0.026451$ & $0.000000e+00$ & $3.072237e-01$\\
+    \hline
+    1-е возбужденное & $0.498856$ & $0.000000e+00$ & $1.006510e+00$\\
+    \hline
+    2-е возбужденное & $0.828367$ & $0.000000e+00$ & $2.410640e+00$\\
+    \hline
+\end{tabularx}
+
+\newpage
+
+\section{Заключение}\label{sec:zakl}
+
+Таким образом, было получено численное решение для задачи о частице в одномерной квантовой яме с бесконечными стенками при помощи метода пристрелки.
+Были получены значения энергий и волновые функции основного и второго возбужденного состояний.
+Полученные волновые функции соответствуют осцилляционной теореме.
+Кроме того, для каждого состояния были вычисленные квантовомеханические средние~$\langle p(x) \rangle, \langle p(x^2) \rangle$.
+
+\newpage
+
+\appendix
+
+\section*{Приложение}\label{sec:extras}
+\input{extras}
+
+
+\newpage
+\begin{thebibliography}{9}
+\bibitem{tim_shrod} Тимошенко Ю.К. \textit{Численное решение стационарного уравнения Шрёдингера.} Воронеж, 2019. 35 с.
+\bibitem{python} Доля П.Г. \textit{Введение в научный Python} Харьков: ХНУ, 2016. 265 с.
+\bibitem{dav} Давыдов А.С. \textit{Квантовая механика} СПб: БХВ-Петербург, 2011. 704 с.
+\bibitem{tim_lectures} Тимошенко Ю.К. \textit{Лекционный материал} 2019.
+\end{thebibliography}
+
+
+\end{document}

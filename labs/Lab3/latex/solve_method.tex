@@ -1,0 +1,57 @@
+Прямой вариационный метод также называемый методом Ритца~\cite{dav} представляет собой численный способ решения уравнения Шрёдингера, который базируется на разложении искомой волновой функции по набору базисных функций.
+Этот метод применим для нахождения приближённых значений собственных энергий и соответствующих волновых функций.
+
+
+Для приближённого решения задачи волновая функция~$\psi(x)$ в уравнении~\eqref{eq:oneDimShrodingerEq} представляется в виде разложения~\cite{tim_lectures} по конечному набору ортонормированных базисных функций $\big{\{}\phi(x)\big{\}}$:
+\begin{equation}
+    \label{eq:ortonorm_basis_func}
+    \psi(x)\approx\sum_{k=1}^{M}c_k \phi_k(x),
+\end{equation}
+где~$M$ -- число базисных функций, $c_k$ -- коэффициенты разложения, которые необходимо найти.
+
+
+Коэффициенты $c_k$ вычисляются из матрицы Гамильтона, где элементы матрицы определяются как:
+
+\begin{equation}
+    \label{eq:gamilton_matrix}
+    H_{nk}=\int_{-\infty}^{+\infty}\phi_m(x)\hat{H}\phi_k(x)dx,
+\end{equation}
+
+Раскладывая оператор Гамильтона~\eqref{eq:gamilton_op} получаем:
+
+\begin{equation}
+    \label{eq:gamilton_op_components}
+    H_{mk}=T_{mk}+U_{mk},
+\end{equation}
+
+где $T_{mk}$ -- кинетическая энергия, а $U_{mk}$ -- потенциальная энергия:
+
+\begin{equation}
+    \label{eq:gamilton_kinetic_e}
+    T_{mk}=-\frac{1}{2}\int_{-\infty}^{+\infty}\phi_m(x)\frac{d^2}{dx^2}\phi_k(x)dx,
+\end{equation}
+\begin{equation}
+    \label{eq:gamilton_pot_e}
+    U_{mk}=\int_{-\infty}^{+\infty}\phi_m(x)U(x)\phi_k(x)dx,
+\end{equation}
+
+В качестве базиса выбираются собственные функции прямоугольного потенциала, которые имеют вид:
+
+\begin{equation}
+    \label{eq:eigen_func}
+    \phi_k(x)=\Biggl\{{
+        \begin{aligned}
+            &\frac{1}{\sqrt{L}}sin{(\frac{k\pi x}{2L})}, &\text{если $k$ четное},  \\
+            &\frac{1}{\sqrt{L}}cos{(\frac{k\pi x}{2L})}, &\text{если $k$ нечетное},
+        \end{aligned}
+    }
+\end{equation}
+
+Эти функции автоматически удовлетворяют граничным условиям $\phi_k(-L)=\phi_k(L)=0$.
+
+
+В результате поиск собственных значений $E$ и соответствующих им функций $\psi(k)$ сводится к вычислению собственных значений и собственных векторов матрицы Гамильтона:
+\begin{equation}
+    \label{eq:eigenvalues_gamilton_matrix}
+    H\vec{c}=E\vec{c}.
+\end{equation}
