@@ -3,6 +3,8 @@
 Программа написана на языке Python 3.0, в среде разработки PyCharm Community Edition 2024.2.1,
 операционная система Windows 10.
 """
+import math
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.special import eval_laguerre
@@ -11,18 +13,18 @@ def draw_potential_graph():
     n = 500
     c_energy = 27.212
     c_length = 0.5292
-    V0 = 25.0 / c_energy
-    L = 3.0 / c_length
-    A, B = -L, L
-    x = np.linspace(A - 0.01, B + 0.01, n)
+    v0 = 25.0 / c_energy
+    l = 3.0 / c_length
+    a, b = -l, l
+    x = np.linspace(a - 0.01, b + 0.01, n)
 
     def u_func():
         u_val = np.zeros(n)
         for i in range(n):
-            if np.abs(x[i]) <= L:
-                u_val[i] = V0 * eval_laguerre(5, np.abs(x[i]))
+            if np.abs(x[i]) <= l:
+                u_val[i] = v0 * eval_laguerre(5, np.abs(x[i]))
             else:
-                u_val[i] = L
+                u_val[i] = l
 
         return u_val
 
@@ -35,7 +37,7 @@ def draw_potential_graph():
     plt.grid(True)
     plt.legend()
 
-    plt.savefig('График потенциальной функции.jpg')
+    plt.savefig('Potential_func_graph.jpg')
     plt.show()
 
 
@@ -47,18 +49,19 @@ class Solver:
         self.c_length = 0.5292
         self.V0 = 25.0 / self.c_energy
         self.L = 3.0 / self.c_length
-        self.A, self.B = -self.L, self.L
-        self.n = 650
+        self.A, self.B = -self.L - 0.01, self.L + 0.01
+        # self.A, self.B = -self.L + 3, self.L - 3
+        self.n = 1000
         self.h = (self.B - self.A) / (self.n - 1)
         self.c, self.W = self.h ** 2 / 12.0, 3.0
         self.Psi, self.Fi, self.X = np.zeros(self.n), np.zeros(self.n), np.linspace(self.A, self.B, self.n)
-        self.r = (self.n - 1) // 2 - 20
+        self.r = (self.n - 1) // 2 - 100
         self.limit_value = 4.0
 
         self.d1, self.d2 = 1.e-09, 1.e-09
-        self.tol = 1e-6
+        self.tol = 1.e-9
 
-        self.E_min, self.E_max, self.step = self.U_min + 0.01, 2.0, 0.01
+        self.E_min, self.E_max, self.step = self.U_min + 0.01, 0.9, 0.001
 
 
     def u_func(self, x):
@@ -71,7 +74,7 @@ class Solver:
             if np.abs(x[i]) <= self.L:
                 u_val[i] = self.V0 * eval_laguerre(5, np.abs(x[i]))
             else:
-                u_val[i] = self.L
+                u_val[i] = self.W
         return u_val
 
     def q(self, e, x):
@@ -194,7 +197,7 @@ class Solver:
             plt.ylabel("Нормализованные волновые функции")
             plt.grid(True)
             plt.legend()
-            plt.savefig(f"Состояние {i} (нормализованное).jpg", dpi=300)
+            plt.savefig(f"Condition_{i}_(normalized).jpg", dpi=300)
             plt.show()
 
 
@@ -208,7 +211,7 @@ class Solver:
             plt.ylabel("Вероятностная плотность")
             plt.grid(True)
             plt.legend()
-            plt.savefig(f"Состояние {i} (Вероятностная плотность).jpg", dpi=300)
+            plt.savefig(f"Condition_{i}_(Probability_density).jpg", dpi=300)
             plt.show()
 
 

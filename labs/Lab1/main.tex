@@ -1,17 +1,56 @@
 \documentclass[a4paper,12pt]{article}
 
+
+\usepackage{mathtext}
+\usepackage[T2A]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage[english,russian]{babel}
-\usepackage{amsmath,amssymb}
+\usepackage[russian]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
 \usepackage{graphicx}
-\usepackage{geometry}
+\usepackage{nameref}
+\usepackage{subcaption}
+\usepackage[margin=1.5pt]{geometry}
 \usepackage{float}
-\usepackage{adjustbox}
-%\usepackage{niceverb} % при необходимости можно оставить
+\usepackage{latexsym}
+\usepackage{stmaryrd}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tabularx}
+
 
 \geometry{left=2cm, right=2cm, top=2cm, bottom=2cm}
 
 \begin{document}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{1,1,1}
+
+\lstdefinestyle{pythonStyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{red},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\lstset{style=pythonStyle}
+
+\pagestyle{empty}
 
 \begin{center}
 \textbf{МИНОБРНАУКИ РОССИИ}\\
@@ -45,176 +84,560 @@
 
 \newpage
 \tableofcontents
+\pagestyle{plain}
+\setcounter{page}{2}
 
 \newpage
-\section{Цели и задачи работы}\label{sec:---}
-\textbf{Цель работы:}
+\section{Цели и задачи работы}\label{sec:goals}
+\subsection{Цель работы.}\label{subsec:-.}
 Целями лабораторной работы являются практическое освоение информации, полученной при изучении курса <<Компьютерное моделирование в математической физике>> по теме <<Численное решение стационарного уравнения Шрёдингера>>, а также развитие алгоритмического мышления и приобретение опыта использования знаний и навыков по математике, численным методам и программированию для решения прикладных задач физико-технического характера.
 
-\textbf{Задачи работы:}
+\subsection{Задачи работы:}\label{subsec:-:}
 
-\textbf{Проблема:} электрон находится в одномерной потенциальной яме с бесконечными стенками:
+\textbf{Проблема:} электрон находится в одномерной потенциальной яме с бесконечными стенками $U(x)$:
 \[
 v(x) =
-\begin{cases}
-J_2(x), & x \in (-L, L), \\
-\infty, & x \notin (-L, L),
-\end{cases}
+    \begin{cases}
+        J_2(x), & x \in (-L, L), \\
+        \infty, & x \notin (-L, L),
+    \end{cases}
 \]
-где \( V_0 = 25 \,\text{эВ}, \, L = 3 \,\text{\AA}, \, J_n(x) \) -- функция Бесселя, \( n \) -- целое число.
+Где $U(x) = v(x)*V_0$, $V_0 = 25$ \text{эВ}, $L = 3$ \AA, $J_n(x)$ -- функция Бесселя, $n = 2$.
 
 \begin{enumerate}
-    \item Найти собственные значения энергии и нормированные волновые функции для основного и 3-го возбужденного состояний частицы в одномерной потенциальной яме с заданной функцией потенциала.
-    \item Построить графики волновых функций и плотностей вероятности.
-    \item Вычислить квантовомеханические средние $\langle x \rangle$ и $\langle x^2 \rangle$ для этих состояний.
+    \item Используя метод пристрелки, найти энергии, нормированные волновые функции и плотности вероятности для основного и 2-го возбужденного состояний.
+          Привести как численные значения энергий, так и построить графики волновых функций и плотностей вероятности.
+    \item Вычислить для этих состояний квантовомеханические средние $\langle p(x) \rangle$ и $ \langle p(x^2) \rangle $.
 \end{enumerate}
 
-\section{Математический формализм}
-Одномерное стационарное уравнение Шрёдингера имеет вид:
+\newpage
+\section{Одномерное стационарное уравнение Шрёдингера. Математический формализм. Общие свойства решений}\label{sec:-}
+Одномерное стационарное уравнение Шрёдингера~\cite{tim}:
 \begin{equation}
     \hat{H}\psi(x) = E\psi(x),
+    \label{eq:oneDimShrodingerEq}
 \end{equation}
 где $\hat{H}$ \textendash{} оператор Гамильтона, $E$ \textendash{} собственные значения энергии, $\psi(x)$ \textendash{} волновая функция.
 
-С математической точки зрения оно представляет собой задачу определения собственных значений $E$ и собственных функций $\psi$ оператора Гамильтона $\hat{H}$. Для частицы с массой $m$, находящейся в потенциальном поле $U(x)$, оператор Гамильтона имеет вид
+С математической точки зрения оно представляет собой задачу определения собственных значений $E$ и собственных функций $\psi$ оператора Гамильтона $\hat{H}$.
+Для частицы с массой $m$, находящейся в потенциальном поле $U(x)$, оператор Гамильтона имеет вид
 \begin{equation}
-    \hat{H} = \hat{T} + U(x),
+    \hat{H} = \hat{T}+ U(x),
+    \label{eq:equation}
 \end{equation}
 где оператор кинетической энергии
 \begin{equation}
-    \hat{T} = -\frac{\hslash^2}{2m}\frac{d^2}{dx^2},
+    \hat{T} =-\frac{\hslash^2}{2m}\frac{d^2}{dx^2},
+    \label{eq:equation2}
 \end{equation}
-а $\hslash$ -- постоянная Планка. Собственное значение оператора Гамильтона имеет смысл энергии соответствующей изолированной квантовой системы. Собственные функции называются волновыми функциями. Волновая функция однозначна и непрерывна во всём пространстве. Непрерывность волновой функции и её первой производной сохраняется и при обращении $U(x)$ в $\infty$ в некоторой области пространства. В такую область частица вообще не может проникнуть, то есть в этой области, а также на её границе $\psi(x)=0$.
+а $\hslash$ --- постоянная Планка.
+Собственное значение оператора Гамильтона имеет смысл энергии соответствующей изолированной квантовой системы.
+Собственные функции называются волновыми функциями.
+Волновая функция однозначна и непрерывна во всём пространстве.
+Непрерывность волновой функции и её первой производной сохраняется и при обращении $U(x)$ в $\infty$ некоторой области пространства.
+В такую область частица вообще не может проникнуть, то есть в этой области, а также на её границе $\psi(x)=0$.
 
-Оценим нижнюю границу энергетического спектра. Пусть минимальное значение потенциальной функции равно $U_{min}$. Очевидно, что $\langle T \rangle \geq 0$ и $\langle U \rangle \geq U_{min}$. Потому из уравнения (1) следует:
+Оценим нижнюю границу энергетического спектра.
+Пусть минимальное значение потенциальной функции равно $U_{\min}$.
+Очевидно, что $\langle T \rangle \geq 0$ и $\langle U \rangle \geq U_{\min}$.
+Потому из уравнения~\eqref{eq:oneDimShrodingerEq} следует, что:
 \begin{equation}
-    E = \langle H \rangle.
+    E =\langle H\rangle = \int_{-\infty}^{+\infty} \psi^\star(x)\hat{H}\psi(x) \,dx =\langle T\rangle +\langle U\rangle > U_{\min}.
+\label{eq:e_h_integral}
 \end{equation}
+то есть, энергии всех состояний > $U_{min}$.
 
-Для системы с потенциальной функцией \( U(x) \), имеющей заданный вид:
+Особый практический интерес представляет случай, когда
 \begin{equation}
-U(x) =
-\begin{cases}
-V_0 L_5(|x|), & |x| < L, \\
-\infty, & |x| \geq L,
-\end{cases}
+    \lim_{x\to\infty} U(x) = 0.
+\label{eq:limit_pot_inf}
 \end{equation}
-где $L_5(x)$ \textendash{} полином Лагерра пятого порядка, $V_0 = 25$ эВ, $L = 3$ \AA.
 
-\section{Метод пристрелки и алгоритм}
-Метод пристрелки используется для численного поиска собственных значений и соответствующих волновых функций.
+Потенциал такого типа называется также потенциальной ямой.
+Для данной $U(x)$ свойства решений уравнения Шрёдингера зависят от знака собственного значения $E$.
+Если $E < 0$.
+Частица с отрицательной энергией совершает финитное движение.
+Оператор Гамильтона имеет дискретный спектр, то есть собственные значения и соответствующие собственные функции можно снабдить номерами.
+При~$E < 0$ уравнение~\eqref{eq:oneDimShrodingerEq} приобретает вид\cite{tim}:
 
-\textbf{Алгоритм метода:}
-\begin{enumerate}
-    \item Разбить область $[A, B]$ на сетку из $n$ узлов.
-    \item Решить уравнение Шрёдингера методом Нумерова для двух направлений (<<вперёд>> и <<назад>>).
-    \item Найти разность производных волновых функций в точке сшивки.
-    \item Уточнять энергию $E$, пока разность производных не станет достаточно малой.
-\end{enumerate}
+\begin{equation}
+    \hat{H}\psi_k(x) = E_k\psi_k(x).
+    \label{eq:shrodinger_eq_e_less_0}
+\end{equation}
 
-\section{Программная реализация алгоритма}
-Программная реализация задачи выполнена на языке \textbf{Python~3}. В Приложении~1 приведён код программы для численного решения уравнения Шрёдингера с заданной потенциальной функцией.
+Квантовое состояние, обладающее наименьшей энергией, называется основным.
+Остальные состояния называют возбужденными состояниями.
+В силу линейности стационарного уравнения Шрёдингера, волновые функции математически определены с точностью до постоянного множителя.
+Однако, из физических соображений, волновые функции должны быть нормированы следующим образом:
 
-\section{Результаты численных экспериментов}
+\begin{equation}
+    \int_{-\infty}^{+\infty} |\psi_k(x)|^2, dx = 1.
+    \label{eq:wave_func_normalization}
+\end{equation}
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|c|c|c|}
-\hline
-\textbf{Состояние} & \textbf{Энергия, эВ} & $\langle x^2 \rangle$, \AA$^2$ \\
-\hline
-Основное & $E_0 = 3.9348$ & $\langle x^2 \rangle = 1.23$ \\
-3-е возбужденное & $E_3 = 25.0$ & $\langle x^2 \rangle = 2.31$ \\
-\hline
-\end{tabular}
-\end{table}
+В дальнейшем будет рассматриваться только дискретный спектр.
+При этом необходимо пользоваться \textbf{осцилляционной теоремой}.
 
-\section*{Иллюстрация работы программы}
+\textbf{Осцилляционная теорема.}
+Упорядочим собственные значения оператора Гамильтона в порядке возрастания, нумеруя энергию основного состояния индексом "0": $E_0$, $E_1$, $E_2$ \dots, $E_k$,\dots.
+Тогда волновая функция $\psi_k(x)$ будет иметь $k$ узлов (то есть, пересечений с осью абсцисс).
+Исключения: области, в которых потенциальная функция бесконечна.
 
-\begin{figure}[H]
-    \centering
-    \begin{tabular}{cc}
-        \adjustbox{\includegraphics[width=0.44\textwidth]{Состояние 0 (нормализованное).jpg}} &
-        \adjustbox{\includegraphics[width=0.44\textwidth]{Состояние 0 (Вероятностная плотность).jpg}} \\
-        (a) Нормализованное состояние & (b) Вероятностная плотность
-    \end{tabular}
-    \caption{Графики для состояния 0}
-    \label{fig:state_0}
-\end{figure}
+\section{Метод пристрелки. Алгоритм}\label{sec:shooting_method}
 
-\begin{figure}[H]
-    \centering
-    \begin{tabular}{cc}
-        \adjustbox{\includegraphics[width=0.44\textwidth]{Состояние 1 (нормализованное).jpg}} &
-        \adjustbox{\includegraphics[width=0.44\textwidth]{Состояние 1 (Вероятностная плотность).jpg}} \\
-        (a) Нормализованное состояние & (b) Вероятностная плотность
-    \end{tabular}
-    \caption{Графики для состояния 1}
-    \label{fig:state_1}
-\end{figure}
+Прежде чем перейти к алгоритму пристрелки нужно преобразовать уравнение~\eqref{eq:oneDimShrodingerEq}.
+В данном случае граничные условия для волновой функции~\cite{tim}:
 
-\begin{figure}[H]
-    \centering
-    \begin{tabular}{cc}
-        \adjustbox{\includegraphics[width=0.44\textwidth]{Состояние 2 (нормализованное).jpg}} &
-        \adjustbox{\includegraphics[width=0.44\textwidth]{Состояние 2 (Вероятностная плотность).jpg}} \\
-        (a) Нормализованное состояние & (b) Вероятностная плотность
-    \end{tabular}
-    \caption{Графики для состояния 2}
-    \label{fig:state_2}
-\end{figure}
+\begin{equation}
+    \psi(a) =\psi(b) = 0
+    \label{eq:waveFuncBordCond}
+\end{equation}
+где в точках a и b по оси абсцисс построены бесконечные потенциальные стенки.
+Для решения уравнения Шрёдингера удобно использовать атомные единицы Хартри (\(e = 1, \hslash = 1\) \text{и} $m_e = 1$).
+В этих единицах уравнение~\eqref{eq:shrodinger_eq_e_less_0}, предполагая, что $m=m_e$~приобретает вид~\cite{tim}:
 
-\begin{figure}[H]
-    \centering
-    \begin{tabular}{cc}
-        \adjustbox{\includegraphics[width=0.44\textwidth]{Состояние 3 (нормализованное).jpg}} &
-        \adjustbox{\includegraphics[width=0.44\textwidth]{Состояние 3 (Вероятностная плотность).jpg}} \\
-        (a) Нормализованное состояние & (b) Вероятностная плотность
-    \end{tabular}
-    \caption{Графики для состояния 3}
-    \label{fig:state_3}
-\end{figure}
+\begin{equation}
+    \left[ -\frac{1}{2}\frac{d^2}{dx^2} +U(x) \right]\psi{x}=E\psi{x}.
+    \label{eq:shrod_au}
+\end{equation}
 
-\begin{figure}[H]
-    \centering
-    \begin{tabular}{cc}
-        \adjustbox{\includegraphics[width=0.44\textwidth]{Состояние 4 (нормализованное).jpg}} &
-        \adjustbox{\includegraphics[width=0.44\textwidth]{Состояние 4 (Вероятностная плотность).jpg}} \\
-        (a) Нормализованное состояние & (b) Вероятностная плотность
-    \end{tabular}
-    \caption{Графики для состояния 4}
-    \label{fig:state_4}
-\end{figure}
+Преобразуем~\eqref{eq:shrod_au} к форме:
 
-\begin{figure}[H]
-    \centering
-    \begin{tabular}{cc}
-        \adjustbox{\includegraphics[width=0.44\textwidth]{Состояние 5 (нормализованное).jpg}} &
-        \adjustbox{\includegraphics[width=0.44\textwidth]{Состояние 5 (Вероятностная плотность).jpg}} \\
-        (a) Нормализованное состояние & (b) Вероятностная плотность
-    \end{tabular}
-    \caption{Графики для состояния 5}
-    \label{fig:state_5}
-\end{figure}
+\begin{equation}
+    \frac{d^2\psi{x}}{dx^2} + q(E, x)\psi(x)=0,
+    \label{eq:shrod_au_converted_form}
+\end{equation}
+где
+\begin{equation}
+    q(E, x)=2\left[ E - U(x) \right].
+    \label{eq:q_e_x}
+\end{equation}
 
-\begin{figure}[H]
-    \centering
-    \begin{tabular}{cc}
-        \adjustbox{\includegraphics[width=0.44\textwidth]{Состояние 6 (нормализованное).jpg}} &
-        \adjustbox{\includegraphics[width=0.44\textwidth]{Состояние 6 (Вероятностная плотность).jpg}} \\
-        (a) Нормализованное состояние & (b) Вероятностная плотность
-    \end{tabular}
-    \caption{Графики для состояния 6}
-    \label{fig:state_6}
-\end{figure}
+Решение стационарного уравнения Шрёдингера сводится к нахождению собственных значений и собственных функций оператора Гамильтона, так как для собственных значений известна оценка снизу~\eqref{eq:e_h_integral}, то удобно начинать с вычисления энергии и волновой функции основного состояния.
+Оценим грубо энергию основного состояния $E_0^{(0)}=U_{min} + \delta,$где $\delta$ - малая величина ($\delta > 0$).
+Подставим значение этой энергии в уравнение~\eqref{eq:shrod_au}.
+Это уравнение теперь становится обыкновенным дифференциальным уравнением 2-го порядка с граничными условиями~\eqref{eq:waveFuncBordCond}.
+Рассмотрим алгоритм, использующий эту идею.
+
+Зададим на интервале $\left[ a,b \right]$ сетку из $N$ узлов с постоянным шагом $h = \frac{(b-a)}{N-1}$:
+
+\begin{equation}
+    x_n=a+(n-1)h, n = 1,2,3,\dots,N.
+    \label{eq:x_nodes}
+\end{equation}
+
+Граничные условия~\eqref{eq:waveFuncBordCond} приобретают вид:
+
+\begin{equation}
+    \psi_1 = \psi_N = 0.
+    \label{eq:newWaveFuncBordCond}
+\end{equation}
+
+Задача Коши для дифференциального уравнения~\eqref{eq:shrod_au} часто решается методом Нумерова.
+В рамках этого метода значения функции в узле сетки находят интегрируя \guillemetleftвперёд\guillemetright:
+
+\begin{equation}
+    \psi_{n+1} = \left[ 2(1 - 5cq_n)\psi_n - (1 + cq_{n-1})\psi_{n-1} \right]\left( 1 + cq_{n+1}^{-1} \right),
+    \label{eq:integrForward}
+\end{equation}
+либо интегрируя \guillemetleftназад\guillemetright
+\begin{equation}
+    \psi_{n+1} = \left[ 2(1 - 5cq_n)\psi_n - (1 + cq_{n+1})\psi_{n+1} \right]\left( 1 + cq_{n-1}^{-1} \right),
+    \label{eq:integrBackward}
+\end{equation}
+
+Здесь $c=h^2/12, q_n=q(E, x_n)$.
+При использовании формулы~\eqref{eq:integrForward} необходимо знать $\psi_1$ и $\psi_2$, а формулы~\eqref{eq:integrBackward} --- $\psi_{N-1}$ и $\psi_N$.
+Значения $\psi_1$ и $\psi_N$ нам известны~\eqref{eq:newWaveFuncBordCond}, а $\psi_2$ и $\psi_{N-1}$ --- нет.
+Однако, если $N$ достаточно, то для простоты можно считать, что $\psi_2=d2, \psi_{N-1}=d2,$~где $d1, d2$ --- малые числа.
+
+Для оценки близости $E$ к собственному значению будем вычислять разность производных волновых функций, полученных интегрированием \guillemetleftвперёд\guillemetright и \guillemetleftназад\guillemetright, в некотором внутреннем узле сетки $x_m$:
+
+\begin{equation}
+    f(E) = \frac{d\psi_>x}{dx}\bigg|_{x_m} - \frac{d\psi_<x}{dx}\bigg|_{x_m}.
+    \label{eq:inner_node_deriv_diff}
+\end{equation}
+где
+\begin{equation}
+    \frac{d\psi}{dx}\bigg|_{x_m} =\frac{\psi(x_m-2h) - \psi(x_m+2h) + 8\left[ \psi(x_m + h) - \psi(x_m - h) \right]}{12h}.
+    \label{eq:inner_node_deriv_diff_expl}
+\end{equation}
+Здесь $\psi_>, \psi_<$ - волновые функции полученные интегрированием~\guillemetleftвперёд\guillemetright~и~\guillemetleftназад\guillemetright~соответственно, $x_m$ --- узел сшивки производных.
+Естественно, перед вычислением~\eqref{eq:inner_node_deriv_diff} необходимо масштабировать функции $\psi_>$ и $\psi_<$ так, чтобы $\psi_>(x_m)=\psi_<(x_m)$.
+
+Будем увеличивать энергию с шагом $\triangle E$ до тех пор, пока величины $f^{(i)}$ на двух соседних шагах $i$ и $i - 1$ не будут иметь различные знаки.
+Далее для уточнения собственного значения с наперед заданной точностью $\epsilon$ используется метод бисекции.
 
 \newpage
+
+\section{Программная реализация алгоритма}\label{sec:--}
+
+
+В~\nameref{sec:extras} программная реализация задачи выполнена на языке Python~3.12~\cite{python}, реализованная в среде разработки PyCharm Community Edition 2024.3.1, численного решения одномерного стационарного уравнения Шредингера для электрона в одномерной потенциальной яме.
+Программа реализует алгоритм пристрелки, позволяющей находить собственные значения и соответствующие им волновые функции.
+Потенциальная функция и параметры для нее соответствуют постановке задачи из первой главы (\ref{sec:goals}).
+
+
+Код программы написан таким образом, что решение поставленной задачи выведено в отдельный файл \textbf{solve.py}.
+В данном файле приводится класс решающий основную часть задачи, а также вспомогательные функции.
+Рассмотрим код данного файла.
+
+Вспомогательная функция~\lstinline[language=Python, columns=fixed]{draw_potential_graph()} отвечает за отрисовку отдельно от основного кода графика потенциальной функции.
+
+
+Ниже рассматривается код класса~\lstinline[columns=fixed]{Solver} -- класса, отвечающего за решение поставленной задачи:
+
+Задание параметров из постановки задачи происходит в конструкторе класса~\lstinline[columns=fixed]{Solver}, такие как: количество точек системы $n$, параметры потенциальной функции $L,V_0$, задаётся приближенное значение энергии $E_{min}$ и шаг $step$, также задаётся узел сшивки $r$.
+Кроме того в нем же энергия и длина ямы были переведены в атомные единицы Хартри (строки 42--45).
+
+В методе~\lstinline[columns=fixed]{u_func} (строки 58-75) реализована потенциальная функция $U(x)$ из постановки задачи.
+
+
+В метод~\lstinline[columns=fixed]{find_exact_energies} класса (строки 142--153) реализован метод пристрелки соответсвующий алгоритму из главы~\ref{sec:shooting_method}.
+
+
+Реализованы методы~\lstinline[columns=fixed]{energy_scan} и~\lstinline[columns=fixed]{bisection_method} в строках 131--140 и 155--167 соответственно.
+Метод~\lstinline[columns=fixed]{find_exact_energies} вычисляет все значения энергий на отрезке~$\left[ E_{min}, E_{max} \right]$ с шагом~\lstinline[columns=fixed]{step},
+метод~\lstinline[columns=fixed]{bisection_method} реализует метод бисекции.
+
+
+В строках 110--129 реализован метод в котором с помощью метода Нумеров вычисляются волновые функции интегрированием вперед и назад, а также вычисляется разность этих функций в узле сшивки.
+В строках 72--73 реализована часть уравнения Шрёдингера и в строках 81--83 реализована формула для вычисления производной в узле сшивки.
+
+
+В строках 81--83 реализована метод для нормировки волновой функции.
+
+
+В строках 86--92 реализовано вычисление квантовомеханических средних по формуле
+$\langle P_x \rangle = \int_{a}^{b}\Psi_n(x)\hat{P}\Psi_n(x),dx = -i \hslash\int_{a}^{b}\Psi_n(x)\frac{d\Psi_n(x)}{dx},dx$.
+
+
+В строках 169--207 реализован метод для вывода графиков и записи данных в файл.
+
+
+В строках 210--219 реализован основной метод класса вызывается метод пристрелки и происходит вычисление всех состояний на заданном диапазоне.
+
+
+\newpage
+
+\section{Результаты численных экспериментов}\label{sec:results}
+
+Ниже продемонстрированы результаты работы программного кода написанного на Python.
+
+\subsection{Иллюстрация работы программы}\label{subsec:results_images}
+
+Потенциал из постановки задачи представлен на Рис.~\ref{fig:pot_func}
+
+\begin{figure}[h]
+\centering
+    \includegraphics[width=0.45\linewidth]{Potential_func_graph}
+    \caption{Вероятностная плотность}\label{fig:pot_func}
+\end{figure}
+
+Для основного состояния была получена энергия $E = 0.498856$ и следующая волновая функция (Рис.~\ref{fig:norm0}) и плотность вероятности (Рис.~\ref{fig:probDens0}):
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{Condition_0_(normalized)}
+        \caption{Нормализованное состояние}
+        \label{fig:norm0}
+    \end{subfigure}%
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{Condition_0_(Probability_density)}
+        \caption{Вероятностная плотность}
+        \label{fig:probDens0}
+    \end{subfigure}%
+\caption{Графики для состояния 0}
+\end{figure}
+\label{fig:cond0}
+
+На рисунках можно видеть, что функции, согласно осцилляционной теореме, соответствуют основному состоянию так как нет пересечений с осью абсцисс,
+кроме бесконечных потенциальных стенок которые не учитываются.
+
+Для второго возбужденного состояния была получена энергия $E = 0.828367$ и следующая волновая функция (Рис.~\ref{fig:norm2}) и плотность вероятности (Рис.~\ref{fig:probDens2}):
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{Condition_2_(normalized)}
+        \caption{Нормализованное состояние}
+        \label{fig:norm2}
+    \end{subfigure}%
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{Condition_2_(Probability_density)}
+        \caption{Вероятностная плотность}
+        \label{fig:probDens2}
+    \end{subfigure}%
+\caption{Графики для состояния 1}
+\end{figure}
+\label{fig:cond2}
+
+На рисунках можно видеть что функции, согласно осцилляционной теореме, соответствуют второму возбужденному состоянию так как есть четыре пересечения с осью абсцисс,
+кроме бесконечных потенциальных стенок которые не учитываются.
+
+\subsection{Значения искомых параметров}\label{subsec:results_values}
+
+Ниже результаты численных экспериментов, полученных в результате работы программы выведены в таблицу:
+
+Квантовомеханические средние $\langle p(x) \rangle$ и $\langle p(x^2) \rangle$ для основного, первого и второго возбужденного состояний:
+
+
+\noindent
+\begin{tabularx}{\linewidth}{|c|X|X|X|}
+    \hline
+    \textbf{Состояние}&\textbf{Энергия, а.е.}&\textbf{$\langle p(x) \rangle$}&\textbf{$\langle p(x^2) \rangle$} \\
+    \hline
+    Основное & $0.026451$ & $0.000000e+00$ & $3.072237e-01$\\
+    \hline
+    1-е возбужденное & $0.498856$ & $0.000000e+00$ & $1.006510e+00$\\
+    \hline
+    2-е возбужденное & $0.828367$ & $0.000000e+00$ & $2.410640e+00$\\
+    \hline
+\end{tabularx}
+
+\newpage
+
+\section{Заключение}\label{sec:zakl}
+
+Таким образом, было получено численное решение для задачи о частице в одномерной квантовой яме с бесконечными стенками при помощи метода пристрелки.
+Были получены значения энергий и волновые функции основного и второго возбужденного состояний.
+Полученные волновые функции соответствуют осцилляционной теореме.
+Кроме того, для каждого состояния были вычисленные квантовомеханические средние~$\langle p(x) \rangle, \langle p(x^2) \rangle$.
+
+\newpage
+
 \appendix
-\section*{Приложение 1. Компьютерный код}
-\begin{verbatim}
-# Здесь может быть ваш Python-код решения уравнения Шрёдингера
-# ...
-\end{verbatim}
+
+\section*{Приложение}\label{sec:extras}
+
+\begin{lstlisting}[language=Python, caption=Код файла solver.py,label={lst:solver}]
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.special import eval_laguerre
+
+def draw_potential_graph():
+    n = 500
+    c_energy = 27.212
+    c_length = 0.5292
+    v0 = 25.0 / c_energy
+    l = 3.0 / c_length
+    a, b = -l, l
+    x = np.linspace(a - 0.01, b + 0.01, n)
+
+    def u_func():
+        u_val = np.zeros(n)
+        for i in range(n):
+            if np.abs(x[i]) <= l:
+                u_val[i] = v0 * eval_laguerre(5, np.abs(x[i]))
+            else:
+                u_val[i] = l
+
+        return u_val
+
+    y = u_func()
+
+    plt.plot(x, y, 'g-', linewidth=6.0, label="U(x)")
+    plt.title(f"Potential function graph")
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.grid(True)
+    plt.legend()
+
+    plt.savefig('Potential_func_graph.jpg')
+    plt.show()
+
+
+class Solver:
+    # Params
+    def __init__(self):
+        self.U_min = -0.149124
+        self.c_energy = 27.212
+        self.c_length = 0.5292
+        self.V0 = 25.0 / self.c_energy
+        self.L = 3.0 / self.c_length
+        self.A, self.B = -self.L, self.L
+        self.n = 650
+        self.h = (self.B - self.A) / (self.n - 1)
+        self.c, self.W = self.h ** 2 / 12.0, 3.0
+        self.Psi, self.Fi, self.X = np.zeros(self.n), np.zeros(self.n), np.linspace(self.A, self.B, self.n)
+        self.r = (self.n - 1) // 2 - 80
+        self.limit_value = 4.0
+
+        self.d1, self.d2 = 1.e-09, 1.e-09
+        self.tol = 1e-6
+
+        self.E_min, self.E_max, self.step = self.U_min + 0.01, 2.0, 0.01
+
+
+    def u_func(self, x):
+        # Check if x is a scalar
+        if np.isscalar(x):
+            # x - scalar
+            return self.V0 * eval_laguerre(5, abs(x)) if abs(x) <= self.L else self.W
+        u_val = np.zeros(self.n)
+        for i in range(self.n):
+            if np.abs(x[i]) <= self.L:
+                u_val[i] = self.V0 * eval_laguerre(5, np.abs(x[i]))
+            else:
+                u_val[i] = self.L
+        return u_val
+
+    def q(self, e, x):
+        return 2.0 * (e - self.u_func(x))
+
+
+    @staticmethod
+    def derivative_func(y, h, m):
+        return (y[m - 2] - y[m + 2] + 8.0 * (y[m + 1] - y[m - 1])) / (12.0 * h)
+
+
+    def normalize_wave_function(self, y):
+        norm = np.sqrt(np.trapz(y ** 2, self.X))
+        return y / norm
+
+
+    @staticmethod
+    def mean_momentum(psi, x):
+        h_bar = 1.0
+        d_psi_dx = np.gradient(psi, x)
+        integrand = psi.conj() * d_psi_dx
+        mean_px = -1j * h_bar * np.trapz(integrand, x)
+        return mean_px.real
+
+
+    @staticmethod
+    def mean_square_momentum(psi, x):
+        h_bar = 1.0
+        d2_psi_dx2 = np.gradient(np.gradient(psi, x), x)
+        integrand = psi.conj() * d2_psi_dx2
+        mean_px2 = -h_bar**2 * np.trapz(integrand, x)
+        return mean_px2.real
+
+    def f_fun(self, e, n):
+        f = np.array([self.c * self.q(e, self.X[i]) for i in np.arange(n)])
+        self.Psi[0] = 0.0
+        self.Fi[n - 1] = 0.0
+        self.Psi[1] = self.d1
+        self.Fi[n - 2] = self.d2
+
+        for i in np.arange(1, n - 1, 1):
+            p1 = 2.0 * (1.0 - 5.0 * f[i]) * self.Psi[i]
+            p2 = (1.0 + f[i - 1]) * self.Psi[i - 1]
+            self.Psi[i + 1] = (p1 - p2) / (1.0 + f[i + 1])
+
+        for i in np.arange(n - 2, 0, -1):
+            f1 = 2.0 * (1.0 - 5.0 * f[i]) * self.Fi[i]
+            f2 = (1.0 + f[i + 1]) * self.Fi[i + 1]
+            self.Fi[i - 1] = (f1 - f2) / (1.0 + f[i - 1])
+
+        p1 = np.abs(self.Psi).max()
+        p2 = np.abs(self.Psi).min()
+        big = p1 if p1 > p2 else p2
+
+        self.Psi[:] = self.Psi[:] / big
+
+        coefficient = self.Psi[self.r] / self.Fi[self.r]
+        self.Fi[:] = coefficient * self.Fi[:]
+
+        return Solver.derivative_func(self.Psi, self.h, self.r) - Solver.derivative_func(self.Fi, self.h, self.r)
+
+    def energy_scan(self, e_min, e_max, step):
+        energies = []
+        values = []
+        e = e_min
+        while e <= e_max:
+            f_value = self.f_fun(e, self.n)
+            energies.append(e)
+            values.append(f_value)
+            e += step
+        return energies, values
+
+    def find_exact_energies(self, e_min, e_max, step, tol):
+        energies, values = self.energy_scan(e_min, e_max, step)
+        exact_energies = []
+        for i in range(1, len(values)):
+            log1 = values[i] * values[i - 1] < 0.0
+            log2 = np.abs(values[i] - values[i - 1]) < self.limit_value
+            if log1 and log2:
+                e1, e2 = energies[i - 1], energies[i]
+                exact_energy = self.bisection_method(e1, e2, tol)
+                self.f_fun(exact_energy, self.n)
+                exact_energies.append(exact_energy)
+        return exact_energies
+
+    def bisection_method(self, e1, e2, tol):
+        while abs(e2 - e1) > tol:
+            e_mid = (e1 + e2) / 2.0
+            f1, f2, f_mid = self.f_fun(e1, self.n), self.f_fun(e2, self.n), self.f_fun(e_mid, self.n)
+            if f1 * f_mid < 0.0:
+                e2 = e_mid
+            else:
+                e1 = e_mid
+            if f2 * f_mid < 0.0:
+                e1 = e_mid
+            else:
+                e2 = e_mid
+        return (e1 + e2) / 2.0
+
+    def plot_wave_functions(self, energies):
+        for i, E in enumerate(energies):
+            self.f_fun(E, self.n)
+            psi_norm = self.normalize_wave_function(self.Psi.copy())
+            fi_norm = self.normalize_wave_function(self.Fi.copy())
+            mean_px = Solver.mean_momentum(fi_norm, self.X)
+            mean_px2 = Solver.mean_square_momentum(fi_norm, self.X)
+            file = open("result.txt", "w")
+            file.close()
+            file1 = open("result.txt", "a")
+            print(f"Condition {i}: E = {E:.6f}, <p_x> = {mean_px:.6e}, <p_x^2> = {mean_px2:.6e}")
+            print(f"Condition {i}: E = {E:.6f}, <p_x> = {mean_px:.6e}, <p_x^2> = {mean_px2:.6e}", file = file1)
+
+            plt.scatter(self.X[self.r], psi_norm[self.r], color='red', s=50, zorder=5)  # Point at Psi
+            plt.scatter(self.X[self.r], fi_norm[self.r], color='blue', s=50, zorder=5)  # Point at Fi
+            plt.plot(self.X, [self.u_func(x) for x in self.X], 'g-', linewidth=6.0, label="U(x)")
+            plt.plot(self.X, psi_norm, label=f"Normalized condition Psi {i}")
+            plt.plot(self.X, fi_norm, '--', label=f"Normalized condition Phi {i}")
+            plt.title(f"Condition {i} (Normalized) for E = {E:.4f}")
+            plt.xlabel("X")
+            plt.ylabel("Normalized wave functions")
+            plt.grid(True)
+            plt.legend()
+            plt.savefig(f"Condition_{i}_(normalized).jpg", dpi=300)
+            plt.show()
+
+
+            prob_density_psi = psi_norm**2
+            prob_density_fi = fi_norm**2
+            plt.plot(self.X, [self.u_func(x) for x in self.X], 'g-', linewidth=6.0, label="U(x)")
+            plt.plot(self.X, prob_density_psi, label=f"Probability density Psi condition {i+1}")
+            plt.plot(self.X, prob_density_fi, '--', label=f"Probability Density Phi condition {i+1}")
+            plt.title(f"Condition {i} - Probability density where E = {E:.4f}")
+            plt.xlabel("X")
+            plt.ylabel("Probability density")
+            plt.grid(True)
+            plt.legend()
+            plt.savefig(f"Condition_{i}_(Probability_density).jpg", dpi=300)
+            plt.show()
+
+
+    def solve(self):
+        e_min, e_max, step = self.U_min + 0.01, 3.0, 0.01
+        exact_energies = self.find_exact_energies(e_min, e_max, step, self.tol)
+
+        if len(exact_energies) == 0:
+            print("Error: energies were not found.")
+        else:
+            print("Energies:")
+            for i, E in enumerate(exact_energies):
+                print(f"Condition {i}: Energy = {E:.6f}")
+
+            self.plot_wave_functions(exact_energies)
+\end{lstlisting}
 
 \newpage
 \begin{thebibliography}{9}
