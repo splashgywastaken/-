@@ -3,8 +3,6 @@
 Программа написана на языке Python 3.0, в среде разработки PyCharm Community Edition 2024.2.1,
 операционная система Windows 10.
 """
-import math
-
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.special import eval_laguerre
@@ -44,24 +42,23 @@ def draw_potential_graph():
 class Solver:
     # Params
     def __init__(self):
-        self.U_min = -0.149124
+        self.U_min = 0.0
         self.c_energy = 27.212
         self.c_length = 0.5292
         self.V0 = 25.0 / self.c_energy
         self.L = 3.0 / self.c_length
         self.A, self.B = -self.L - 0.01, self.L + 0.01
-        # self.A, self.B = -self.L + 3, self.L - 3
         self.n = 1000
         self.h = (self.B - self.A) / (self.n - 1)
         self.c, self.W = self.h ** 2 / 12.0, 3.0
         self.Psi, self.Fi, self.X = np.zeros(self.n), np.zeros(self.n), np.linspace(self.A, self.B, self.n)
-        self.r = (self.n - 1) // 2 - 100
-        self.limit_value = 4.0
+        self.r = (self.n - 1) // 2 - 80
+        self.limit_value = 7.0
 
         self.d1, self.d2 = 1.e-09, 1.e-09
-        self.tol = 1.e-9
+        self.tol = 1.e-06
 
-        self.E_min, self.E_max, self.step = self.U_min + 0.01, 0.9, 0.001
+        self.E_min, self.E_max, self.step = self.U_min, 3, 0.001
 
 
     def u_func(self, x):
@@ -190,14 +187,14 @@ class Solver:
             plt.scatter(self.X[self.r], psi_norm[self.r], color='red', s=50, zorder=5)  # Точка на Psi
             plt.scatter(self.X[self.r], fi_norm[self.r], color='blue', s=50, zorder=5)  # Точка на Fi
             plt.plot(self.X, [self.u_func(x) for x in self.X], 'g-', linewidth=6.0, label="U(x)")
-            plt.plot(self.X, psi_norm, label=f"Нормализованное состояние Пси {i}")
-            plt.plot(self.X, fi_norm, '--', label=f"Нормализованное состояние Фи {i}")
-            plt.title(f"Состояние {i} (Нормализованное) при E = {E:.4f}")
+            plt.plot(self.X, psi_norm, label=f"Нормализованное состояние Пси {i+1}")
+            plt.plot(self.X, fi_norm, '--', label=f"Нормализованное состояние Фи {i+1}")
+            plt.title(f"Состояние {i + 1 if i != 0 else i} (Нормализованное) при E = {E:.4f}")
             plt.xlabel("X")
             plt.ylabel("Нормализованные волновые функции")
             plt.grid(True)
             plt.legend()
-            plt.savefig(f"Condition_{i}_(normalized).jpg", dpi=300)
+            plt.savefig(f"Condition_{i + 1 if i != 0 else i}_(normalized).jpg", dpi=300)
             plt.show()
 
 
@@ -206,18 +203,17 @@ class Solver:
             plt.plot(self.X, [self.u_func(x) for x in self.X], 'g-', linewidth=6.0, label="U(x)")
             plt.plot(self.X, prob_density_psi, label=f"Вероятностная плотность Пси состояния {i+1}")
             plt.plot(self.X, prob_density_fi, '--', label=f"Probability Density Фи состояния {i+1}")
-            plt.title(f"Состояние {i} - Вероятностная плотность при E = {E:.4f}")
+            plt.title(f"Состояние {i + 1 if i != 0 else i} - Вероятностная плотность при E = {E:.4f}")
             plt.xlabel("X")
             plt.ylabel("Вероятностная плотность")
             plt.grid(True)
             plt.legend()
-            plt.savefig(f"Condition_{i}_(Probability_density).jpg", dpi=300)
+            plt.savefig(f"Condition_{i + 1 if i != 0 else i}_(Probability_density).jpg", dpi=300)
             plt.show()
 
 
     def solve(self):
-        e_min, e_max, step = self.U_min + 0.01, 3.0, 0.01
-        exact_energies = self.find_exact_energies(e_min, e_max, step, self.tol)
+        exact_energies = self.find_exact_energies(self.E_min, self.E_max, self.step, self.tol)
 
         if len(exact_energies) == 0:
             print("Ошибка: энергии не были найдены.")

@@ -6,6 +6,4 @@
 \contentsline {section}{\numberline {3}Теория возмущений. Алгоритм}{6}{section.3}%
 \contentsline {section}{\numberline {4}Программная реализация алгоритма}{8}{section.4}%
 \contentsline {section}{\numberline {5}Результаты численных экспериментов}{9}{section.5}%
-\contentsline {subsection}{\numberline {5.1}Иллюстрация работы программы}{9}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}Значения искомых параметров}{9}{subsection.5.2}%
-\contentsline {section}{\numberline {6}Заключение}{10}{section.6}%
+\contentsline {section}{\numberline {6}Заключение}{15}{section.6}%

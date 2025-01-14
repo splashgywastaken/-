@@ -14,9 +14,6 @@ def u_func(x):
     return V0 * eval_laguerre(5, x) if abs(x) < L else W
 
 
-"""
-The Ritz method
-"""
 def basis_function(k):
     result = np.zeros(N)
     h = (2 * L) / (N - 1)
@@ -112,14 +109,14 @@ def plot_wave_functions(arg_energies, arg_wave_functions):
         plt.savefig(f"./python_results/State {i} probability density.jpg", dpi=300)
         plt.show()
 
-        print("=====================================================")
-        print("=====================================================", file=output_file)
+        print("-----------------------------------------------------")
+        print("-----------------------------------------------------", file=output_file)
         print(f"State {i}: E = {arg_energies[i]:.6f}, <p_x> = {mean_Px:.6e}, <p_x^2> = {mean_Px2:.6e}")
         print(f"State {i}: E = {arg_energies[i]:.6f}, <p_x> = {mean_Px:.6e}, <p_x^2> = {mean_Px2:.6e}", file=output_file)
         print(f"State {i}: E_target = {exact_energies[i]:.6f}, <p_x> = {mean_P:.6e}, <p_x^2> = {mean_P2:.6e}")
         print(f"State {i}: E_target = {exact_energies[i]:.6f}, <p_x> = {mean_P:.6e}, <p_x^2> = {mean_P2:.6e}", file=output_file)
-        print("=====================================================")
-        print("=====================================================", file=output_file)
+        print("-----------------------------------------------------")
+        print("-----------------------------------------------------", file=output_file)
 
         plt.plot(x_vals, psi, 'r', label=f"State {i} (E = {arg_energies[i]:.5f})")
         plt.plot(X, Psi_norm, 'b--', label=f"State {i} (E_target = {exact_energies[i]:.5f})")
@@ -220,9 +217,6 @@ def bisection_method(arg_e1, arg_e2, arg_tol):
     return (arg_e1 + arg_e2) / 2.0
 
 
-"""
-Parameters
-"""
 c_length = 0.5292
 c_energy = 27.212
 
@@ -234,22 +228,20 @@ N = 1001
 M = 21
 
 A, B = -L, L
-n = 401
+n = 1000
 h = (B - A) / (n - 1)
 c = h ** 2 / 12.0
 Psi, Fi, X = np.zeros(n), np.zeros(n), np.linspace(A, B, n)
-r = (n-1)//2 - 100
-limit = 4.0
+r = (n-1)//2 - 80
+limit = 7.0
 
 d1, d2 = 1.e-09, 1.e-09
 tol = 1e-6
-U_min = -0.149124
-E_min, E_max, step = U_min + 0.01, 3.0, 0.01
+U_min = 0.0
+E_min, E_max, step = U_min + 0.01, 3.0, 0.001
 exact_energies = find_exact_energies(E_min, E_max, step, tol)
 
-"""
-Results
-"""
+
 h_matrix = hamiltonian_matrix()
 energies, eigenvectors = eigen_solve(h_matrix)
 

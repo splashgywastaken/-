@@ -202,77 +202,7 @@ v(x) =
 \newpage
 
 \section{Результаты численных экспериментов}\label{sec:results}
-
-Ниже продемонстрированы результаты работы программного кода написанного на Python.
-
-\subsection{Иллюстрация работы программы}\label{subsec:results_images}
-
-Потенциал из постановки задачи представлен на Рис.~\ref{fig:pot_func}
-
-%\begin{figure}[h]
-%\centering
-%    \includegraphics[width=0.45\linewidth]{}
-%    \caption{Вероятностная плотность}\label{fig:pot_func}
-%\end{figure}
-
-%\begin{figure}[H]
-%    \centering
-%    \begin{subfigure}{0.45\textwidth}
-%        \centering
-%        \includegraphics[width=0.9\linewidth]{Condition_0_(normalized)}
-%        \caption{Нормализованное состояние}
-%        \label{fig:norm0}
-%    \end{subfigure}%
-%    \begin{subfigure}{0.45\textwidth}
-%        \centering
-%        \includegraphics[width=0.9\linewidth]{Condition_0_(Probability_density)}
-%        \caption{Вероятностная плотность}
-%        \label{fig:probDens0}
-%    \end{subfigure}%
-%\caption{Графики для состояния 0}
-%\end{figure}
-%\label{fig:cond0}
-
-
-
-%\begin{figure}[H]
-%    \centering
-%    \begin{subfigure}{0.45\textwidth}
-%        \centering
-%        \includegraphics[width=0.9\linewidth]{Condition_2_(normalized)}
-%        \caption{Нормализованное состояние}
-%        \label{fig:norm2}
-%    \end{subfigure}%
-%    \begin{subfigure}{0.45\textwidth}
-%        \centering
-%        \includegraphics[width=0.9\linewidth]{Condition_2_(Probability_density)}
-%        \caption{Вероятностная плотность}
-%        \label{fig:probDens2}
-%    \end{subfigure}%
-%\caption{Графики для состояния 1}
-%\end{figure}
-%\label{fig:cond2}
-
-\subsection{Значения искомых параметров}\label{subsec:results_values}
-
-Ниже результаты численных экспериментов, полученных в результате работы программы выведены в таблицу:
-
-Квантовомеханические средние $\langle p(x) \rangle$ и $\langle p(x^2) \rangle$ для основного, первого и второго возбужденного состояний:
-
-\noindent
-\begin{tabularx}{\linewidth}{|c|X|X|X|}
-    \hline
-    \textbf{Состояние}&\textbf{Энергия, а.е.}&\textbf{$\langle p(x) \rangle$}&\textbf{$\langle p(x^2) \rangle$} \\
-    \hline
-    Основное & $0.026451$ & $0.000000e+00$ & $3.072237e-01$\\
-    \hline
-    1-е возбужденное & $0.498856$ & $0.000000e+00$ & $1.006510e+00$\\
-    \hline
-    2-е возбужденное & $0.828367$ & $0.000000e+00$ & $2.410640e+00$\\
-    \hline
-\end{tabularx}
-
-\newpage
+\input{results}
 
 \section{Заключение}\label{sec:zakl}
 
@@ -280,6 +210,8 @@ v(x) =
 Были получены значения энергий и волновые функции основного и второго возбужденного состояний.
 Полученные волновые функции соответствуют осцилляционной теореме.
 Кроме того, для каждого состояния были вычисленные квантовомеханические средние~$\langle p(x) \rangle, \langle p(x^2) \rangle$.
+Полученные волновые функции соответствуют осцилляционной теореме.
+Сравнивая результаты полученные методом возмущений с методом пристрелки можно сказать что метод возмущений менее точен и требует больших затрат чем метод пристрелки: как со стороны разработчика, так и со стороны ЭВМ на котором производятся вычисления.
 
 \newpage
 

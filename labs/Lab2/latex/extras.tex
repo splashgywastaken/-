@@ -1,223 +1,346 @@
 \begin{lstlisting}[language=Python, caption=Код файла solver.py,label={lst:solver}]
+"""
+Крутько А.С. ЧИСЛЕННОЕ РЕШЕНИЕ СТАЦИОНАРНОГО УРАВНЕНИЯ ШРЁДИНГЕРА: ТЕОРИЯ ВОЗМУЩЕНИЙ.
+Программа написана на языке Python 3.12, в среде разработки PyCharm Community Edition 2024.3.1,
+операционная система Windows 10.
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.special import eval_laguerre
 
-def draw_potential_graph():
-    n = 500
-    c_energy = 27.212
-    c_length = 0.5292
-    v0 = 25.0 / c_energy
-    l = 3.0 / c_length
-    a, b = -l, l
-    x = np.linspace(a - 0.01, b + 0.01, n)
 
-    def u_func():
-        u_val = np.zeros(n)
-        for i in range(n):
-            if np.abs(x[i]) <= l:
-                u_val[i] = v0 * eval_laguerre(5, np.abs(x[i]))
-            else:
-                u_val[i] = l
-
-        return u_val
-
-    y = u_func()
-
-    plt.plot(x, y, 'g-', linewidth=6.0, label="U(x)")
-    plt.title(f"Potential function graph")
-    plt.xlabel("X")
-    plt.ylabel("Y")
-    plt.grid(True)
-    plt.legend()
-
-    plt.savefig('Potential_func_graph.jpg')
-    plt.show()
+def u0_func(x):
+    if abs(x) <= L:
+        return V0 * eval_laguerre(5, abs(x))
+    else:
+        return 3.0
 
 
-class Solver:
-    # Params
-    def __init__(self):
-        self.U_min = -0.149124
-        self.c_energy = 27.212
-        self.c_length = 0.5292
-        self.V0 = 25.0 / self.c_energy
-        self.L = 3.0 / self.c_length
-        self.A, self.B = -self.L, self.L
-        self.n = 650
-        self.h = (self.B - self.A) / (self.n - 1)
-        self.c, self.W = self.h ** 2 / 12.0, 3.0
-        self.Psi, self.Fi, self.X = np.zeros(self.n), np.zeros(self.n), np.linspace(self.A, self.B, self.n)
-        self.r = (self.n - 1) // 2 - 80
-        self.limit_value = 4.0
-
-        self.d1, self.d2 = 1.e-09, 1.e-09
-        self.tol = 1e-6
-
-        self.E_min, self.E_max, self.step = self.U_min + 0.01, 2.0, 0.01
+def q_func(e, x, potential_func):
+    return 2.0 * (e - potential_func(x))
 
 
-    def u_func(self, x):
-        # Check if x is a scalar
-        if np.isscalar(x):
-            # x - scalar
-            return self.V0 * eval_laguerre(5, abs(x)) if abs(x) <= self.L else self.W
-        u_val = np.zeros(self.n)
-        for i in range(self.n):
-            if np.abs(x[i]) <= self.L:
-                u_val[i] = self.V0 * eval_laguerre(5, np.abs(x[i]))
-            else:
-                u_val[i] = self.L
-        return u_val
-
-    def q(self, e, x):
-        return 2.0 * (e - self.u_func(x))
+def find_derivative(y_arg, h_arg, m):
+    return (y_arg[m - 2] - y_arg[m + 2] + 8.0 * (y_arg[m + 1] - y_arg[m - 1])) / (12.0 * h_arg)
 
 
-    @staticmethod
-    def derivative_func(y, h, m):
-        return (y[m - 2] - y[m + 2] + 8.0 * (y[m + 1] - y[m - 1])) / (12.0 * h)
+def normalize_wave_function(y_arg):
+    norm = np.sqrt(np.trapz(y_arg ** 2, X))
+    return y_arg / norm
 
 
-    def normalize_wave_function(self, y):
-        norm = np.sqrt(np.trapz(y ** 2, self.X))
-        return y / norm
+def mean_momentum(psi_arg, x_arg):
+    h_bar = 1.0
+    dPsi_dx = np.gradient(psi_arg, x_arg)
+    integrand = psi_arg.conj() * dPsi_dx
+    mean_Px = -1j * h_bar * np.trapz(integrand, x_arg)
+    return mean_Px.real
 
 
-    @staticmethod
-    def mean_momentum(psi, x):
-        h_bar = 1.0
-        d_psi_dx = np.gradient(psi, x)
-        integrand = psi.conj() * d_psi_dx
-        mean_px = -1j * h_bar * np.trapz(integrand, x)
-        return mean_px.real
+def mean_square_momentum(psi_arg, x_arg):
+    h_bar = 1.0
+    d2Psi_dx2 = np.gradient(np.gradient(psi_arg, x_arg), x_arg)
+    integrand = psi_arg.conj() * d2Psi_dx2
+    mean_Px2 = -h_bar**2 * np.trapz(integrand, x_arg)
+    return mean_Px2.real
 
 
-    @staticmethod
-    def mean_square_momentum(psi, x):
-        h_bar = 1.0
-        d2_psi_dx2 = np.gradient(np.gradient(psi, x), x)
-        integrand = psi.conj() * d2_psi_dx2
-        mean_px2 = -h_bar**2 * np.trapz(integrand, x)
-        return mean_px2.real
+def f_fun(e, n_arg, potential_func):
+    F = np.array([c * q_func(e, X[i], potential_func) for i in np.arange(n_arg)])
+    Psi.fill(0.0)
+    Psi[0] = 0.0
+    Fi[n_arg - 1] = 0.0
+    Psi[1] = d1
+    Fi[n_arg - 2] = d2
 
-    def f_fun(self, e, n):
-        f = np.array([self.c * self.q(e, self.X[i]) for i in np.arange(n)])
-        self.Psi[0] = 0.0
-        self.Fi[n - 1] = 0.0
-        self.Psi[1] = self.d1
-        self.Fi[n - 2] = self.d2
+    for i in np.arange(1, n_arg - 1, 1):
+        p1 = 2.0 * (1.0 - 5.0 * F[i]) * Psi[i]
+        p2 = (1.0 + F[i - 1]) * Psi[i - 1]
+        Psi[i + 1] = (p1 - p2) / (1.0 + F[i + 1])
 
-        for i in np.arange(1, n - 1, 1):
-            p1 = 2.0 * (1.0 - 5.0 * f[i]) * self.Psi[i]
-            p2 = (1.0 + f[i - 1]) * self.Psi[i - 1]
-            self.Psi[i + 1] = (p1 - p2) / (1.0 + f[i + 1])
+    for i in np.arange(n_arg - 2, 0, -1):
+        f1 = 2.0 * (1.0 - 5.0 * F[i]) * Fi[i]
+        f2 = (1.0 + F[i + 1]) * Fi[i + 1]
+        Fi[i - 1] = (f1 - f2) / (1.0 + F[i - 1])
 
-        for i in np.arange(n - 2, 0, -1):
-            f1 = 2.0 * (1.0 - 5.0 * f[i]) * self.Fi[i]
-            f2 = (1.0 + f[i + 1]) * self.Fi[i + 1]
-            self.Fi[i - 1] = (f1 - f2) / (1.0 + f[i - 1])
+    p1 = np.abs(Psi).max()
+    p2 = np.abs(Psi).min()
+    big = p1 if p1 > p2 else p2
 
-        p1 = np.abs(self.Psi).max()
-        p2 = np.abs(self.Psi).min()
-        big = p1 if p1 > p2 else p2
+    Psi[:] = Psi[:] / big
+    coefficient = Psi[r] / Fi[r]
+    Fi[:] = coefficient * Fi[:]
 
-        self.Psi[:] = self.Psi[:] / big
-
-        coefficient = self.Psi[self.r] / self.Fi[self.r]
-        self.Fi[:] = coefficient * self.Fi[:]
-
-        return Solver.derivative_func(self.Psi, self.h, self.r) - Solver.derivative_func(self.Fi, self.h, self.r)
-
-    def energy_scan(self, e_min, e_max, step):
-        energies = []
-        values = []
-        e = e_min
-        while e <= e_max:
-            f_value = self.f_fun(e, self.n)
-            energies.append(e)
-            values.append(f_value)
-            e += step
-        return energies, values
-
-    def find_exact_energies(self, e_min, e_max, step, tol):
-        energies, values = self.energy_scan(e_min, e_max, step)
-        exact_energies = []
-        for i in range(1, len(values)):
-            log1 = values[i] * values[i - 1] < 0.0
-            log2 = np.abs(values[i] - values[i - 1]) < self.limit_value
-            if log1 and log2:
-                e1, e2 = energies[i - 1], energies[i]
-                exact_energy = self.bisection_method(e1, e2, tol)
-                self.f_fun(exact_energy, self.n)
-                exact_energies.append(exact_energy)
-        return exact_energies
-
-    def bisection_method(self, e1, e2, tol):
-        while abs(e2 - e1) > tol:
-            e_mid = (e1 + e2) / 2.0
-            f1, f2, f_mid = self.f_fun(e1, self.n), self.f_fun(e2, self.n), self.f_fun(e_mid, self.n)
-            if f1 * f_mid < 0.0:
-                e2 = e_mid
-            else:
-                e1 = e_mid
-            if f2 * f_mid < 0.0:
-                e1 = e_mid
-            else:
-                e2 = e_mid
-        return (e1 + e2) / 2.0
-
-    def plot_wave_functions(self, energies):
-        for i, E in enumerate(energies):
-            self.f_fun(E, self.n)
-            psi_norm = self.normalize_wave_function(self.Psi.copy())
-            fi_norm = self.normalize_wave_function(self.Fi.copy())
-            mean_px = Solver.mean_momentum(fi_norm, self.X)
-            mean_px2 = Solver.mean_square_momentum(fi_norm, self.X)
-            file = open("result.txt", "w")
-            file.close()
-            file1 = open("result.txt", "a")
-            print(f"Condition {i}: E = {E:.6f}, <p_x> = {mean_px:.6e}, <p_x^2> = {mean_px2:.6e}")
-            print(f"Condition {i}: E = {E:.6f}, <p_x> = {mean_px:.6e}, <p_x^2> = {mean_px2:.6e}", file = file1)
-
-            plt.scatter(self.X[self.r], psi_norm[self.r], color='red', s=50, zorder=5)  # Point at Psi
-            plt.scatter(self.X[self.r], fi_norm[self.r], color='blue', s=50, zorder=5)  # Point at Fi
-            plt.plot(self.X, [self.u_func(x) for x in self.X], 'g-', linewidth=6.0, label="U(x)")
-            plt.plot(self.X, psi_norm, label=f"Normalized condition Psi {i}")
-            plt.plot(self.X, fi_norm, '--', label=f"Normalized condition Phi {i}")
-            plt.title(f"Condition {i} (Normalized) for E = {E:.4f}")
-            plt.xlabel("X")
-            plt.ylabel("Normalized wave functions")
-            plt.grid(True)
-            plt.legend()
-            plt.savefig(f"Condition_{i}_(normalized).jpg", dpi=300)
-            plt.show()
+    return find_derivative(Psi, h, r) - find_derivative(Fi, h, r)
 
 
-            prob_density_psi = psi_norm**2
-            prob_density_fi = fi_norm**2
-            plt.plot(self.X, [self.u_func(x) for x in self.X], 'g-', linewidth=6.0, label="U(x)")
-            plt.plot(self.X, prob_density_psi, label=f"Probability density Psi condition {i+1}")
-            plt.plot(self.X, prob_density_fi, '--', label=f"Probability Density Phi condition {i+1}")
-            plt.title(f"Condition {i} - Probability density where E = {E:.4f}")
-            plt.xlabel("X")
-            plt.ylabel("Probability density")
-            plt.grid(True)
-            plt.legend()
-            plt.savefig(f"Condition_{i}_(Probability_density).jpg", dpi=300)
-            plt.show()
+def energy_scan(e_min_arg, e_max_arg, step_arg, potential_func):
+    energies = []
+    values = []
+    E = e_min_arg
+    while E <= e_max_arg:
+        f_value = f_fun(E, n, potential_func)
+        energies.append(E)
+        values.append(f_value)
+        E += step_arg
+    return energies, values
 
 
-    def solve(self):
-        e_min, e_max, step = self.U_min + 0.01, 3.0, 0.01
-        exact_energies = self.find_exact_energies(e_min, e_max, step, self.tol)
+def find_exact_energies(e_min, e_max, step_arg, tol_arg, potential_func):
+    energies, values = energy_scan(e_min, e_max, step_arg, potential_func)
+    inner_exact_energies = []
+    for i in range(1, len(values)):
+        Log1 = values[i] * values[i - 1] < 0.0
+        Log2 = np.abs(values[i] - values[i - 1]) < limit
+        if Log1 and Log2:
+            E1, E2 = energies[i - 1], energies[i]
+            exact_energy = bisection_method(E1, E2, tol_arg, potential_func)
+            f_fun(exact_energy, n, potential_func)
+            inner_exact_energies.append(exact_energy)
+    return inner_exact_energies
 
-        if len(exact_energies) == 0:
-            print("Error: energies were not found.")
+
+def bisection_method(e1, e2, tol_arg, potential_func):
+    while abs(e2 - e1) > tol_arg:
+        Emid = (e1 + e2) / 2.0
+        f1, f2, f_mid = f_fun(e1, n, potential_func), f_fun(e2, n, potential_func), f_fun(Emid, n, potential_func)
+        if f1 * f_mid < 0.0:
+            e2 = Emid
         else:
-            print("Energies:")
-            for i, E in enumerate(exact_energies):
-                print(f"Condition {i}: Energy = {E:.6f}")
+            e1 = Emid
+        if f2 * f_mid < 0.0:
+            e1 = Emid
+        else:
+            e2 = Emid
+    return (e1 + e2) / 2.0
 
-            self.plot_wave_functions(exact_energies)
+
+def count_zeros(psi, x):
+    y_axis_crossings_count = 0
+    for i in range(1, len(psi) - 1):
+        if psi[i - 1] * psi[i] < 0:
+            y_axis_crossings_count += 1
+    return y_axis_crossings_count
+
+c_energy = 27.212
+c_length = 0.5292
+V0 = 25.0 / c_energy
+L = 3.0 / c_length
+A, B = -L - 0.01, L + 0.01
+n = 1000
+h = (B - A) / (n - 1)
+c, W = h ** 2 / 12.0, 3.0
+Psi, Fi, X = np.zeros(n), np.zeros(n), np.linspace(A, B, n)
+r = (n-1)//2 - 80
+limit = 7.0
+
+d1, d2 = 1.e-09, 1.e-09
+tol = 1e-6
+
+E_min, E_max, step = 0.0, 9.0, 0.001
+exact_energies = find_exact_energies(E_min + 0.001, E_max, step, tol, u0_func)
+
+if len(exact_energies) == 0:
+    print("Error.")
+else:
+    print("Energies:")
+    for i, E in enumerate(exact_energies):
+        f_fun(E, n, u0_func)
+        zeros_count = count_zeros(Psi, X)
+        print(f"Energy level {i}: {E:.6f}, cross: {zeros_count}")
+
+results_file = open(f"./python_results/result.txt", "a")
+
+
+def u_func(x):
+    if abs(x) < L:
+        if -0.545 <= x <= 0.545:
+            return 1
+        else:
+            return V0 * eval_laguerre(5, abs(x))
+    else:
+        return 3.0
+
+
+def v_func(x):
+    return u_func(x) - u0_func(x)
+
+
+def e0(k):
+    if k < len(exact_energies):
+        return exact_energies[k]
+    else:
+        raise ValueError(f"There is no level with the {k} number")
+
+
+def psi_interp(k, x):
+    f_fun(exact_energies[k], n, u0_func)
+    Psi_copy = normalize_wave_function(Psi.copy())
+    return np.interp(x, X, Psi_copy)
+
+
+def funct(x, k1, k2):
+    psi_k1 = psi_interp(k1, x)
+    psi_k2 = psi_interp(k2, x)
+    return psi_k1 * v_func(x) * psi_k2
+
+
+def matrix_el(k1, k2):
+    integrand_values = np.array([funct(x, k1, k2) for x in X])
+    res = np.trapz(integrand_values, X)
+    return res if abs(res) > 1e-14 else 0.0
+
+
+def e_corr_2(kmax, root):
+    s = 0.0
+    for k in range(0, root):
+        s += matrix_el(root, k) ** 2 / (e0(root) - e0(k))
+        energy_diff = abs(e0(root) - e0(k))
+        if abs(matrix_el(root, k)) >= energy_diff:
+            print(f"Возможное расхождение: ")
+        print("k = ", k, " s = ", s)
+        print("k = ", k, " s = ", s, file=results_file)
+    for k in range(root + 1, kmax + 1):
+        s += matrix_el(root, k) ** 2 / (e0(root) - e0(k))
+        print("k = ", k, " s = ", s)
+        print("k = ", k, " s = ", s, file=results_file)
+    return s
+
+
+def c_psi_corr_1(kmax, root):
+    c = np.zeros(kmax)
+    for k in range(0, root):
+        c[k] = matrix_el(root, k) / (e0(root) - e0(k))
+    for k in range(root + 1, kmax + 1):
+        c[k - 1] = matrix_el(root, k) / (e0(root) - e0(k))
+    return c
+
+
+def psi_corr_1(x, c, n, root):
+    kmax = len(c)
+    s = 0.0
+    for k in range(0, root):
+        s += c[k] * psi_interp(k, x)
+    for k in range(root + 1, kmax + 1):
+        s += c[k - 1] * psi_interp(k, x)
+    return s
+
+
+def psi(x, c, n, root):
+    return psi_interp(root, x) + psi_corr_1(x, c, n, root)
+
+
+def result(root):
+    kmax = int(len(exact_energies) - 1)
+    print("-----------------------------------------------------")
+    print("-----------------------------------------------------", file=results_file)
+    print(f"State {root}")
+    print(f"State {root}", file=results_file)
+    print("kmax = ", kmax)
+    print("kmax = ", kmax, file=results_file)
+    e1 = e0(root) + matrix_el(root, root)
+    print("e0(1) = ", e0(root))
+    print("e0(1) = ", e0(root), file=results_file)
+    print("e = ", e1, "  (1-approximation)")
+    print("e = ", e1, "  (1-approximation)", file=results_file)
+    e2 = e0(root) + matrix_el(root, root) + e_corr_2(kmax, root)
+    print("e = ", e2, "  (2-approximation)")
+    print("e = ", e2, "  (2-approximation)", file=results_file)
+
+    c1 = c_psi_corr_1(kmax, root)
+    for i in range(len(c1)):
+        print("c[{:1d}] = {:15.8e}".format(i, c1[i]))
+        print("c[{:1d}] = {:15.8e}".format(i, c1[i]), file=results_file)
+    psi_arr = np.array([psi(x, c1, n, root) for x in X])
+    E_min2, E_max2, step2 = 0.0, 3.0, 0.01
+    exact_energies2 = find_exact_energies(E_min2 + 0.001, E_max2, step2, tol, u_func)
+    f_fun(exact_energies2[root], n, u_func)
+    Psi_copy2 = normalize_wave_function(Psi.copy())
+    psi_arr2 = normalize_wave_function(psi_arr.copy())
+    psi_density = psi_arr2 ** 2
+
+    mean_Px = mean_momentum(psi_arr2, X)
+    mean_Px2 = mean_square_momentum(psi_arr2, X)
+    print(f"E_perturbation = {e2:.6f}, <p_x> = {mean_Px:.6e}, <p_x^2> = {mean_Px2:.6e}")
+    print(f"E_perturbation = {e2:.6f}, <p_x> = {mean_Px:.6e}, <p_x^2> = {mean_Px2:.6e}", file=results_file)
+    mean_Px = mean_momentum(Psi_copy2, X)
+    mean_Px2 = mean_square_momentum(Psi_copy2, X)
+    print(f"E_target = {exact_energies2[root]:.6f}, <p_x> = {mean_Px:.6e}, <p_x^2> = {mean_Px2:.6e}")
+    print(f"E_target = {exact_energies2[root]:.6f}, <p_x> = {mean_Px:.6e}, <p_x^2> = {mean_Px2:.6e}", file=results_file)
+    print("-----------------------------------------------------")
+    print("-----------------------------------------------------", file=results_file)
+
+
+    Zero = np.zeros(n, dtype=float)
+    Upot = np.array([u_func(X[i]) for i in np.arange(n)])
+
+    plt.xlabel("x", fontsize=18, color="k")
+    plt.ylabel("Psi(x)", fontsize=18, color="k")
+    plt.plot(X, Zero, 'k--', linewidth=1.0)
+    plt.plot(X, Upot, 'g-', linewidth=3.0, label="U(x)")
+    line1, = plt.plot(X, psi_arr2, 'b-', linewidth=3.0, label="")
+    line2, = plt.plot(X, psi_density, 'r-', linewidth=3.0, label="")
+
+    plt.subplots_adjust(bottom=0.3)
+
+    plt.figtext(0.5, 0.02,
+                f"Psi{root} perturbation method (E = {e2:.4f})\n"
+                f"Psi{root} probability density)",
+                ha="center", fontsize=10)
+
+    plt.legend([line1, line2],
+               [f"Psi{root} perturbation method ", f"Psi{root} probability density"],
+               fontsize=7, loc='upper right')
+
+    plt.grid(True)
+    plt.twinx()
+    plt.yticks([])
+    plt.savefig(f"./python_results/State{root} probability density.jpg", dpi=300)
+    plt.show()
+    plt.close('all')
+
+
+    plt.xlabel("x", fontsize=18, color="k")
+    plt.ylabel("Psi(x)", fontsize=18, color="k")
+    plt.plot(X, Zero, 'k--', linewidth=1.0)
+    plt.plot(X, Upot, 'g-', linewidth=3.0, label="U(x)")
+    line1, = plt.plot(X, psi_arr2, 'b-', linewidth=3.0, label="")
+    line2, = plt.plot(X, Psi_copy2, 'r-', linewidth=3.0, label="")
+
+    plt.subplots_adjust(bottom=0.3)
+
+    plt.figtext(0.5, 0.02,
+                f"Psi{root} perturbation method (E = {e2:.4f})\n"
+                f"Psi{root} target method (E = {exact_energies2[root]:.4f})",
+                ha="center", fontsize=10)
+
+    plt.legend([line1, line2],
+               [f"Psi{root} perturbation method ", f"Psi{root} target method"],
+               fontsize=10, loc='upper right')
+
+    plt.grid(True)
+    plt.twinx()
+    plt.yticks([])
+    plt.savefig(f"./python_results/State{root}.jpg", dpi=300)
+    plt.show()
+    plt.close('all')
+
+result(0)
+result(2)
+
+plt.plot(X, [u0_func(x) for x in X], 'g-', linewidth=3.0, label="U(x)")
+plt.xlabel("X")
+plt.ylabel("U0(X)")
+plt.grid(True)
+plt.legend()
+plt.savefig("./python_results/U0(X).jpg", dpi=300)
+plt.show()
+
+plt.plot(X, [u_func(x) for x in X], 'g-', linewidth=3.0, label="U(x)")
+plt.xlabel("X")
+plt.ylabel("U(X)")
+plt.grid(True)
+plt.legend()
+plt.savefig("./python_results/U(X).jpg", dpi=300)
+plt.show()
 \end{lstlisting}
