@@ -53,12 +53,12 @@ class Solver:
         self.c, self.W = self.h ** 2 / 12.0, 3.0
         self.Psi, self.Fi, self.X = np.zeros(self.n), np.zeros(self.n), np.linspace(self.A, self.B, self.n)
         self.r = (self.n - 1) // 2 - 80
-        self.limit_value = 7.0
+        self.limit_value = 4.0
 
         self.d1, self.d2 = 1.e-09, 1.e-09
         self.tol = 1.e-06
 
-        self.E_min, self.E_max, self.step = self.U_min, 3, 0.001
+        self.E_min, self.E_max, self.step = self.U_min, 3, 0.00000001
 
 
     def u_func(self, x):

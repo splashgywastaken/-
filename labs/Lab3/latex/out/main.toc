@@ -6,6 +6,4 @@
 \contentsline {section}{\numberline {3}Прямой вариационный метод. Алгоритм}{6}{section.3}%
 \contentsline {section}{\numberline {4}Программная реализация алгоритма}{7}{section.4}%
 \contentsline {section}{\numberline {5}Результаты численных экспериментов}{8}{section.5}%
-\contentsline {subsection}{\numberline {5.1}Иллюстрация работы программы}{8}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}Значения искомых параметров}{8}{subsection.5.2}%
-\contentsline {section}{\numberline {6}Заключение}{9}{section.6}%
+\contentsline {section}{\numberline {6}Заключение}{10}{section.6}%
